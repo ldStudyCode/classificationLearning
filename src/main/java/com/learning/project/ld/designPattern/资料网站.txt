@@ -1,0 +1,2 @@
+23种设计模式相关学习网站:http://c.biancheng.net/view/1322.html;
+双重锁线程不安全:https://www.jianshu.com/p/17ed6a46ed85
