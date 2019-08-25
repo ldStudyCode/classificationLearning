@@ -7,12 +7,26 @@ package com.learning.project.ld.designPattern.single;
  */
 public class SingleModel {
     public static void main(String[] args){
-        new TestThread().start();
-        new TestThread().start();
-        new TestThread().start();
+        Test test = new Test();
+        test.test();
+//        StaticClassSingleModle.getInstance();
+//        StaticClassSingleModle.getInstance();
+        //new TestThread().start();
+        //new TestThread().start();
+        //new TestThread().start();
+
     }
 
 }
+class Test{
+    public Test(){
+        System.out.println(" create Test ");
+    }
+    public static void test(){
+        System.out.println(" this is test");
+    }
+}
+
 class TestThread extends Thread{
     @Override
     public void run() {
@@ -77,13 +91,19 @@ class HungrySingleModel{
  * 静态内部类
  */
 class StaticClassSingleModle{
+    private StaticClassSingleModle(){};
     private static class SingleClassInstance{
-        public static final StaticClassSingleModle staticClassSingleModle = new StaticClassSingleModle();
+        public static final StaticClassSingleModle staticClassSingleModle ;
+        static{
+            staticClassSingleModle= new StaticClassSingleModle();
+            System.out.println("静态内部类装载");
+        }
         private SingleClassInstance(){
+
         }
-        public StaticClassSingleModle getInstance(){
-            return SingleClassInstance.staticClassSingleModle;
-        }
+    }
+    public static StaticClassSingleModle getInstance(){
+        return SingleClassInstance.staticClassSingleModle;
     }
 }
 
