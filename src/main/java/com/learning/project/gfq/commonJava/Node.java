@@ -2,8 +2,8 @@ package com.learning.project.gfq.commonJava;
 
 public class Node {
 	// 保存每一个节点，此处为了方便直接定义成内部类
-	String data ;	// 保存节点的内容
-	Node next ;		// 保存下一个节点
+	public String data ;	// 保存节点的内容
+	public Node next ;		// 保存下一个节点
 	public Node(String data){
 		this.data = data ;		// 通过构造方法设置节点内容
 	}

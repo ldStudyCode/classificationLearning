@@ -5,13 +5,13 @@ import java.util.Queue;
 import java.util.Stack;
 
 public class TreeNode {
-	
-	int val;
-	TreeNode left;
-	TreeNode right;
-	TreeNode parent;
-	
-	TreeNode(int val) {
+
+	public int val;
+	public TreeNode left;
+	public TreeNode right;
+	public TreeNode parent;
+
+	public TreeNode(int val) {
 		this.val = val;
 	}
 	
