@@ -1,3 +1,6 @@
 23种设计模式相关学习网站:http://c.biancheng.net/view/1322.html;
 双重锁线程不安全:https://www.jianshu.com/p/17ed6a46ed85
 菜鸟教程设计模式：https://www.runoob.com/design-pattern/abstract-factory-pattern.html
+
+久其电脑ip:10.2.21.85
+内存屏障:https://www.jianshu.com/p/64240319ed60
