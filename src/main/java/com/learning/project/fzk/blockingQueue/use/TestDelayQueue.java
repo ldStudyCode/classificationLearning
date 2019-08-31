@@ -19,6 +19,10 @@ public class TestDelayQueue {
 	// 运行中的任务队列
 	private static MyDelayQueue<TaskRunning> runningTaskQueue = new MyDelayQueue();
 
+	/**
+	 * 两个线程，循环从两个阻塞队列中取数据。
+	 * 若有弹出的任务，说明此任务状态需发生改变（未开始->运行中，或运行中->结束）
+	 */
 	static {
 		new Thread(() -> {
 			try {
