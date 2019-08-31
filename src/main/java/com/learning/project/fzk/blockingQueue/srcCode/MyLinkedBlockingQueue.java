@@ -28,7 +28,7 @@ public class MyLinkedBlockingQueue<E> {
 	 * 移除元素（remove）、获取迭代器（iterators）这俩操作会同时获取两个锁。
 	 */
 
-	// 双链表节点
+	// 单链表节点
 	static class Node<E> {
 		E item;
 		// 真实的下一个节点 / null表示这是最后一个节点 / 当前节点，meaning the successor is head.next TODO
