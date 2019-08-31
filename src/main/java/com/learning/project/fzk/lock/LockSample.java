@@ -47,7 +47,7 @@ public class LockSample {
 		});
 
 		thread1.start();
-		Thread.sleep(200); // 确保thread1先抢执行，先到锁
+		Thread.sleep(200); // 确保thread1先执行，先抢到锁
 		thread2.start();
 		Thread.sleep(3000); // 等待所有线程执行完成
 	}
@@ -72,7 +72,7 @@ public class LockSample {
 				System.out.println("Thread1:wait方法被唤醒，重新获取到锁！");
 			} catch (InterruptedException e) {
 				e.printStackTrace();
-			}finally {
+			} finally {
 				System.out.println("Thread1:解锁！");
 				lock.unlock();
 			}
@@ -85,7 +85,7 @@ public class LockSample {
 				System.out.println("Thread2:终于抢到锁！");
 				condition.signal();
 				System.out.println("Thread2:我还能走！signal并不会立即唤醒，要等到当前线程释放锁后再唤醒别人！");
-			}finally {
+			} finally {
 				System.out.println("Thread2:解锁！");
 				lock.unlock();
 			}
@@ -93,7 +93,7 @@ public class LockSample {
 		});
 
 		thread1.start();
-		Thread.sleep(200); // 确保thread1先抢执行，先到锁
+		Thread.sleep(200); // 确保thread1先执行，先抢到锁
 		thread2.start();
 		Thread.sleep(3000); // 等待所有线程执行完成
 	}
