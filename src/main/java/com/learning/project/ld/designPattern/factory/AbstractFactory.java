@@ -73,3 +73,13 @@ class ShapeFactory extends AbstractFactory {
         return null;
     }
 }
+class AbstractFactoryProducer {
+    public static void main(String[] args){
+        AbstractFactory factory= AbstractFactoryProducer.getFactory();
+        Shape shape= factory.getShape("CIRCLE");
+    }
+    public static AbstractFactory getFactory(){
+            return new ShapeFactory();
+
+    }
+}
