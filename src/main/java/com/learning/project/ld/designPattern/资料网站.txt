@@ -4,3 +4,5 @@
 
 久其电脑ip:10.2.21.85
 内存屏障:https://www.jianshu.com/p/64240319ed60
+spring mybatis 各版本源码下载地址：https://blog.csdn.net/guo_guo_cai/article/details/80733807
+mybatis源码git地址：https://github.com/mybatis/mybatis-3/releases
