@@ -72,6 +72,7 @@ class LazySingleModel{
 
 /**
  * 饿汉式单例
+ * jdk对应源码 Runtime类 可获取运行环境参数,执行系统命令
  */
 class HungrySingleModel{
     /*
@@ -85,6 +86,12 @@ class HungrySingleModel{
     private HungrySingleModel(){}
     public static HungrySingleModel getInstance(){
         return hungrySingleModel;
+    }
+
+    public static void main(String[] args){
+        Runtime runtime= Runtime.getRuntime();
+        //当前服务器可用处理器个数
+        System.out.println(runtime.availableProcessors());
     }
 }
 

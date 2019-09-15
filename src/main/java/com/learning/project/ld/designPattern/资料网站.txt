@@ -1,5 +1,8 @@
 23种设计模式相关学习网站:http://c.biancheng.net/view/1322.html;
 双重锁线程不安全:https://www.jianshu.com/p/17ed6a46ed85
 菜鸟教程设计模式：https://www.runoob.com/design-pattern/abstract-factory-pattern.html
-连接电脑账号：jiuqi.com.cn\lvdong
-设计模式jdk中的应用https://stackoverflow.com/questions/1673841/examples-of-gof-design-patterns-in-javas-core-libraries
+
+久其电脑ip:10.2.21.85
+内存屏障:https://www.jianshu.com/p/64240319ed60
+spring mybatis 各版本源码下载地址：https://blog.csdn.net/guo_guo_cai/article/details/80733807
+mybatis源码git地址：https://github.com/mybatis/mybatis-3/releases
