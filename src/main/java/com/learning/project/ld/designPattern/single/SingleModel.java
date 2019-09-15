@@ -39,6 +39,7 @@ class TestThread extends Thread{
 
 /**
  * 懒汉式单例
+ * Desktop
  */
 class LazySingleModel{
     private String name;
@@ -109,6 +110,7 @@ class StaticClassSingleModle{
 
 /**
  * 双重锁判断
+ * spring jar AbstractBeanFactory
  */
 class DoubleSyncSingleModel{
     private static volatile DoubleSyncSingleModel doubleSyncSingleModel;
