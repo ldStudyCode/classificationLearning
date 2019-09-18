@@ -11,7 +11,11 @@ public class CloneModel implements Cloneable{
         this.name = name;
     }
 
-    CloneModel(String name,String desc){
+    public CloneModel() {
+        super();
+    }
+
+    CloneModel(String name, String desc){
         this.name=name;
         this.desc=desc;
         System.out.println("CloneModel 原型创建成功");}

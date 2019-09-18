@@ -1,5 +1,6 @@
 package com.learning.project.ld.basicAlgorithms;
 
-public class Block {
+public class
+Block {
 
 }

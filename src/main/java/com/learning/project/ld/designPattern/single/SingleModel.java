@@ -1,5 +1,7 @@
 package com.learning.project.ld.designPattern.single;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * 单例模式
  * @author lvdong
@@ -72,7 +74,7 @@ class LazySingleModel{
 
 /**
  * 饿汉式单例
- * jdk对应源码 Runtime类 可获取运行环境参数,执行系统命令
+ * jdk对应源码 Runtime类 可获取运行环境参数,执行系统命令getRuntime
  */
 class HungrySingleModel{
     /*

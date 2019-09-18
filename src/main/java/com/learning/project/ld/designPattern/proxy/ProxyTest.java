@@ -1,7 +1,8 @@
 package com.learning.project.ld.designPattern.proxy;
+/**
+ * 代理模式
+ */
 
-public class ProxyTest {
-}
 interface Subject{void request();}
 class RealSubject implements Subject{
 
