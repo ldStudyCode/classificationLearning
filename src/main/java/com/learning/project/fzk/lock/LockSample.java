@@ -60,6 +60,7 @@ public class LockSample {
 		ReentrantLock lock = new ReentrantLock();
 		Condition condition = lock.newCondition();
 
+
 		Thread thread1 = new Thread(() -> {
 			lock.lock();
 			System.out.println("Thread1:获取到锁");
