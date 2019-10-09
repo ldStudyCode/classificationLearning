@@ -1,6 +1,13 @@
 package com.learning.project.ld.designPattern.proxy;
 /**
  * 代理模式
+ * 优点：
+ *  1.对目标对象有保护作用
+ *  2.代理对象可扩展目标对象功能
+ *  3.一定程度的解耦
+ * 缺点：
+ *  1.增加系统复杂度
+ *  2.由于增加代理对象，处理速度有所下降
  */
 
 interface Subject{void request();}
