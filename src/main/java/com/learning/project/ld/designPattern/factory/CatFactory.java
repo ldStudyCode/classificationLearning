@@ -1,7 +1,7 @@
 package com.learning.project.ld.designPattern.factory;
 
 /**
- * 工厂方法类
+ * 简单工厂方法类
  * Calendar 类中有应用实现createCalendar方法
  * @author lvdong
         * date 2019-08-26

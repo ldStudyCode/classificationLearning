@@ -1,6 +1,7 @@
 package com.learning.project.ld.designPattern.proxy;
 /**
  * 代理模式
+ * 继承同一接口
  * 优点：
  *  1.对目标对象有保护作用
  *  2.代理对象可扩展目标对象功能
