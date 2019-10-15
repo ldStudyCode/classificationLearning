@@ -1,6 +1,7 @@
 package com.learning.project.gfq.privateNote.blockedQueue;
 
-import com.learning.project.fzk.lock.LockSample;
+
+import com.learning.project.fzk.multiThread.lock.LockSample;
 
 public class LockSampleRun {
 

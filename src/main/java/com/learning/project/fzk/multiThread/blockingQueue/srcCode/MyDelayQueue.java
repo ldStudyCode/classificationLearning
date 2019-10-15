@@ -1,4 +1,4 @@
-package com.learning.project.fzk.blockingQueue.srcCode;
+package com.learning.project.fzk.multiThread.blockingQueue.srcCode;
 
 import java.util.PriorityQueue;
 import java.util.concurrent.Delayed;

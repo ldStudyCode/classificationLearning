@@ -1,6 +1,6 @@
-package com.learning.project.fzk.blockingQueue.test;
+package com.learning.project.fzk.multiThread.blockingQueue.test;
 
-import com.learning.project.fzk.blockingQueue.srcCode.MyLinkedBlockingQueue;
+import com.learning.project.fzk.multiThread.blockingQueue.srcCode.MyLinkedBlockingQueue;
 import org.junit.Assert;
 import org.junit.Test;
 
