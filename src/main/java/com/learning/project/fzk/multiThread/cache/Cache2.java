@@ -32,6 +32,7 @@ import java.util.concurrent.FutureTask;
  *   key_result
  *   key_result
  *   ...
+ * 即，只要一次计算成功，后面都不会执行重复的计算
  */
 public class Cache2<K, V> implements Cache<K, V> {
 
