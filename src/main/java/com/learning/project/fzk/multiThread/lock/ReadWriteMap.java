@@ -1,4 +1,4 @@
-package com.learning.project.fzk.lock;
+package com.learning.project.fzk.multiThread.lock;
 
 import java.util.Map;
 import java.util.concurrent.locks.Lock;

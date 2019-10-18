@@ -1,6 +1,6 @@
-package com.learning.project.fzk.blockingQueue.use;
+package com.learning.project.fzk.multiThread.blockingQueue.use;
 
-import com.learning.project.fzk.blockingQueue.srcCode.MyDelayQueue;
+import com.learning.project.fzk.multiThread.blockingQueue.srcCode.MyDelayQueue;
 import org.junit.Test;
 
 import java.util.Date;

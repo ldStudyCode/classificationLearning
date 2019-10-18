@@ -1,4 +1,4 @@
-package com.learning.project.fzk.blockingQueue.use;
+package com.learning.project.fzk.multiThread.blockingQueue.use;
 
 /**
  * 任务类
