@@ -20,24 +20,22 @@ public class Cache3<K, V> implements Cache<K, V> {
     }
 
     public V getResult(K key) {
-        while (true) { // 加一层循环，处理计算失败的情况
-            V value = map.get(key);
-            // 未命中，第一次检查
-            if (value == null) {
-                // 第二次原子性检查，并记录是否put成功：若返回值为空，说明成功抢到锁并put进去；若返回值非空，说明已经有其他线程抢先put进去了
-                value = map.computeIfAbsent(key, k -> {
-                    while (true) { // 处理计算失败的情况
-                        try {
-                            return computable.compute(key);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+        V value = map.get(key);
+        // 未命中，第一次检查
+        if (value == null) {
+            // 第二次原子性检查，并记录是否put成功：若返回值为空，说明成功抢到锁并put进去；若返回值非空，说明已经有其他线程抢先put进去了
+            value = map.computeIfAbsent(key, k -> {
+                while (true) { // 处理计算失败的情况
+                    try {
+                        return computable.compute(key);
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                });
-            }
-            // 此时，value一定已经计算完成
-            return value;
+                }
+            });
         }
+        // 此时，value一定已经计算完成
+        return value;
     }
 }
 
