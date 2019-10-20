@@ -2,15 +2,13 @@ package com.learning.project.ld.designPattern.tacticsFactory;
 
 /**
  * 策略模式
- * 解耦 简化了单元测试
- * 优点：5
+ * 优点：
+ *  解耦
+ *  简化了单元测试
  *  开闭原则
- *
- *
- *
  * 缺点：
  *  客户端必须知道所有的策略，并自行决定使用哪一个策略
- *  代码中h会产生非常多的策略类，增加维护难度
+ *  代码中会产生非常多的策略类，增加维护难度
  * @author lvdong
  */
 public class ShoppingTacticsTwo {
