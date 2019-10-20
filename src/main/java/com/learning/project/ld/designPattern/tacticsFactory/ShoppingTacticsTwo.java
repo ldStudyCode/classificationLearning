@@ -5,6 +5,7 @@ package com.learning.project.ld.designPattern.tacticsFactory;
  * 优点：
  *  解耦
  *  简化了单元测试
+ *  --迪米特法则、接口隔离原则 依赖倒置
  *  开闭原则
  * 缺点：
  *  客户端必须知道所有的策略，并自行决定使用哪一个策略
@@ -14,6 +15,7 @@ package com.learning.project.ld.designPattern.tacticsFactory;
 public class ShoppingTacticsTwo {
     public static void main(String[] args){
         CashContext cashContext = new CashContext("正常收费");
+        CashContext cashContextTwo = new CashContext(new CashReturn());
         double total=0;
         double count = cashContext.getResult(1.1*2);
         total+=count;
