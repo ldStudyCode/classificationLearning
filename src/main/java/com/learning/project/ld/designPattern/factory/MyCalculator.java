@@ -120,6 +120,10 @@ class AddCount implements CountClass{
     }
 }
 
+/**
+ * 配置类用来管理算法类
+ *
+ */
 class SubCount implements CountClass{
     private CountParam countParam;
     public SubCount(CountParam countParam) {

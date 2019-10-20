@@ -27,20 +27,57 @@ class CountShopping{
  *  新增满减无法解决 例如满300减200
  */
 interface ShoppingAlgorithm{
-    public double getResult();
+    public double getResult(double countMoney);
 }
 
+/**
+ * 折扣子类
+ */
 class discountAlgorithm implements ShoppingAlgorithm{
-
-    public discountAlgorithm(double numOne,double numTwo){
-
+    double discount;
+    public discountAlgorithm(double discount){
+        this.discount=discount;
     }
     @Override
-    public double getResult() {
-        return 0;
+    public double getResult(double countMoney) {
+        return countMoney*discount;
     }
 }
 
+/**
+ * 满减子类
+ */
+class FullReduction implements ShoppingAlgorithm{
+    double numOne;
+    double numTwo;
+    public FullReduction(double numOne,double numTwo){
+        this.numOne=numOne;
+        this.numTwo=numTwo;
+    }
+    @Override
+    public double getResult(double countMoney) {
+        if(countMoney>=numOne){
+            return countMoney-numTwo;
+        }
+        return countMoney;
+    }
+}
+
+class ShoppingActivityFactory{
+    public ShoppingAlgorithm getShoppingAlgorithm(String type){
+        ShoppingAlgorithm shoppingAlgorithm=null;
+        switch(type){
+            case "1":
+                shoppingAlgorithm =  new discountAlgorithm(0.8);
+
+        }
+        return shoppingAlgorithm;
+    }
+}
+
+/**
+ * 数据存储类
+ */
 class ShoppingCashier{
     Double price;
     Double num;

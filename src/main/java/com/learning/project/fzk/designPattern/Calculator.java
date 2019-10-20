@@ -16,7 +16,7 @@ public class Calculator {
     static Map<String, Operator> operatorMap = new HashMap<>();
 
     static {
-        operatorMap.put("+", Add.getInstance());
+        operatorMap.put("+", new Add());
         operatorMap.put("-", new Minus());
         operatorMap.put("*", new Times());
         operatorMap.put("/", new Division());
@@ -45,11 +45,6 @@ interface Operator {
 
 // 加
 class Add implements Operator {
-    private static Add add = new Add();
-    private Add(){}
-    public static Add getInstance(){
-        return add;
-    }
     public double calculate(double a, double b) {
         return a + b;
     }
