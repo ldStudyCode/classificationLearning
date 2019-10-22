@@ -18,7 +18,7 @@ public class TestCache {
     @Test
     public void test() throws Exception {
         // 初始化缓存结构时，指定转换函数
-        Cache<String, String> cache = new Cache3<String, String>(new Computer());
+        Cache<String, String> cache = new Cache1<>(new Computer());
 
         // 并行运行线程数
         final int threadNum = 100;

@@ -1,6 +1,5 @@
 package com.learning.project.gfq.homework.designModel;
 
-import com.sun.xml.internal.ws.wsdl.writer.document.OpenAtts;
 import org.springframework.scheduling.support.SimpleTriggerContext;
 
 import java.util.HashSet;
