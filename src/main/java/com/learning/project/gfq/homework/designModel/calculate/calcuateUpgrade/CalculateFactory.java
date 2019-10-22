@@ -1,4 +1,4 @@
-package com.learning.project.gfq.homework.designModel.calcuateUpgrade;
+package com.learning.project.gfq.homework.designModel.calculate.calcuateUpgrade;
 
 public interface CalculateFactory {
 

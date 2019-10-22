@@ -1,6 +1,4 @@
-package com.learning.project.gfq.homework.designModel.calcuateUpgrade;
-
-import java.awt.*;
+package com.learning.project.gfq.homework.designModel.calculate.calcuateUpgrade;
 
 public class CalculateUpgrade {
 
