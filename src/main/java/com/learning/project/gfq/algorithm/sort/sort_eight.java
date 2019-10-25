@@ -7,23 +7,18 @@ import java.util.LinkedList;
 public class sort_eight {
 
 	public static void main(String[] args) {
-//		int vol = 8;
-//		int num = 4;
-//		int[] cap = {2,3,4,5};
-//		int[] val = {3,4,5,6};
-//		System.out.println(prac1(vol, num, cap, val));
 		
 		int[] arry = {2,54,1,23,6,234,2,32,234,234,2352,42342,3243423,234,234,234,3,2,3,4};
-//		System.out.println(prac2_directly_insertion_sort(arry));
-//		System.out.println(prac2_binary_insertion_sort(arry));
-//		System.out.println(prac2_shell_sort(arry));
-//		System.out.println(prac2_shell_sort_2(arry));
-//		System.out.println(prac3_straight_select_sort(arry));
+		System.out.println(prac2_directly_insertion_sort(arry));
+		System.out.println(prac2_binary_insertion_sort(arry));
+		System.out.println(prac2_shell_sort(arry));
+		System.out.println(prac2_shell_sort_2(arry));
+		System.out.println(prac3_straight_select_sort(arry));
 		System.out.println(prac3_heap_sort(arry));
-//		System.out.println(prac3_bubble_sort(arry));
-//		System.out.println(prac3_quick_sort(arry));
-//		System.out.println(prac4_merge_sort(arry));
-//		System.out.println(prac5_basic_sort(arry));
+		System.out.println(prac3_bubble_sort(arry));
+		System.out.println(prac3_quick_sort(arry));
+		System.out.println(prac4_merge_sort(arry));
+		System.out.println(prac5_basic_sort(arry));
 	}
 	
 	
@@ -31,6 +26,8 @@ public class sort_eight {
 	
 	// -八大排序算法实现---------------------------------------------
 	// 排序算法实现细节的一个重要点，中间值不保留数组值，保留数组的位置指针值
+	// 特指内部排序，即所有的数都能放进内存的情况下，进行的排序
+	// 注意两个次数：比较次数、交换次数【算法必须锱铢必较，不然前面优化的1%很可能被某个地方又吃掉了】
 	
 	//时间复杂度
 	/*
@@ -43,17 +40,26 @@ public class sort_eight {
 	
 	//直接插入排序
 	/*
-	 * 时间复杂度：O（n^2）
-	 * 空间复杂度：O(1)
-	 * 
+	1、说明：
+		将一条记录插入一个已知有序的数组中，直至全部插入完毕。
+	2、细节优化：
+		可否优化交换次数：可，58行写 >，不要写>=，可减少交换次数
+		可否优化比较次数：可，62行加上else break;
+	3、复杂度分析：
+	    时间复杂度：O（n^2）
+	 	空间复杂度：O(1)
+	4、其他：
+		最坏情况：数组正好与排序方向逆序
+		最好情况：数组正好有序，比较次数n^2,交换次数0
+		数组越有序，排序速度越快
 	*/
 	public static String prac2_directly_insertion_sort(int[] arry) {
-		if(arry.length < 2) {
+		if(arry.length < 2) {//鲁棒
 			return Arrays.toString(arry);
 		}
 		for(int i = 1; i < arry.length; i++) {
 			for(int j = i; j >= 1; j--) {
-				if(arry[j-1] > arry[j]){
+				if(arry[j-1] >= arry[j]){
 					int tmp = arry[j-1];
 					arry[j-1] = arry[j];
 					arry[j] = tmp;
@@ -64,11 +70,30 @@ public class sort_eight {
 	}
 	
 	//折半插入排序
+	/*
+	1、说明：
+		把找合适的位置这个动作，换成了二分查找，其余不变，相当于优化了"比较次数"
+	2、细节优化：
+		可否优化交换次数：特殊情况下可，可避免相等情况下的交换
+		可否优化比较次数：可，95行可以加等于时的判断，写在最后一个else中更好
+			二分查找只能在匹配相等的时候，才能有控制能力，所以可以在这里下手，帮助在提前匹配的时候有一些操作
+	3、复杂度分析：
+		时间复杂度：O(nlog2n)：1 - n/2； 2 - n/4； x - n/2^x；最坏情况下，长度变为1时才找到了对的人
+		空间复杂度：O(1)
+	4、其他：
+		low、high、mid之间的关系：
+		遇到拆分数组的时候，while循环最好用，记住两个点(2+2)/2=2;(2+3)/2=2，这样就记住了l <= h 和 h = m - 1；l = m + 1
+			while循环适用于：在循环结束后，还要在用到循环内迭代修改的变量
+			for循环适用于：在循环结束后，不需要用到循环内迭代修改的变量，代码更简洁
+	*/
 	//折半查找只是减少了比较次数，但是元素的移动次数不变
 	public static String prac2_binary_insertion_sort(int[] arry) {
+		if(arry.length < 2)
+			return Arrays.toString(arry);
 		for(int i = 1; i < arry.length; i++) {
 			int low = 0;
 			int high = i-1;
+			//二分查找，找到合适的人
 			while(low <= high) {
 				int mid = (low + high)/2;
 				if(arry[i] < arry[mid]){
@@ -77,9 +102,11 @@ public class sort_eight {
 					low = mid + 1;
 				}
 			}
+			//交换
 			int first = arry[low];
 			arry[low] = arry[i];
 			int tmp = 0;
+			//移动
 			while(low <= i - 1) {
 				tmp = arry[low + 1];
 				arry[low + 1] = first;
@@ -90,18 +117,28 @@ public class sort_eight {
 		return Arrays.toString(arry);
 	}
 	
-	//希尔排序 shell sort
+	//希尔排序 shell sort （缩小增量排序）
 	//https://blog.csdn.net/weixin_37818081/article/details/79202115
 	//increment取法是关键
 	/*
-	 * 希尔排序（shell sort）这个排序方法又称为缩小增量排序，是1959年D·L·Shell提出来的。
-	 * 该方法的基本思想是：
-	 * 设待排序元素序列有n个元素，首先取一个整数increment（小于n）作为间隔将全部元素分为increment个子序列
-	 * 所有距离为increment的元素放在同一个子序列中，在每一个子序列中分别实行直接插入排序。然后缩小间隔increment
-	 * 重复上述子序列划分和排序工作。直到最后取increment=1，将所有元素放在同一个子序列中排序为止。 
-	 *
-	 * 由于开始时，increment的取值较大，每个子序列中的元素较少，排序速度较快
-	 * 到排序后期increment取值逐渐变小，子序列中元素个数逐渐增多，但由于前面工作的基础，大多数元素已经基本有序，所以排序速度仍然很快
+	1、说明：
+		利用一个increment，将数组拆成小数组
+		开始时，increment的取值较大，每个子序列中的元素较少，排序速度较快
+		后期increment取值逐渐变小，子序列中元素个数逐渐增多，此时已基本有序，插入排序优势体现了
+	2、细节优化：
+		可否优化交换次数：同插入排序
+		可否优化比较次数：同插入排序
+		外面包的一层increment本人认为没有太多优化点
+	3、复杂度分析：
+		时间复杂度与increment相关，难以计算
+		空间复杂度O(1)
+	4、其他：
+		increment取法是关键：
+		关键点是，尽量让每一次increment变化时，没见过面的人能互相见面排一次序，那么increment取的就好
+		如：shell最初提increment = increment/2,这样只有到最后，奇数才能与偶数碰面并比较
+		两个说法 1、increment/3 2、increment取质数。
+		Robert Sedgewick 编写了一种动态定义increment的算法，未明白用意，希望讨论一下数学层面，是否做到了每次让不同的人碰面，https://www.cnblogs.com/duhuo/p/5088975.html
+
 	*/
 	public static String prac2_shell_sort(int[] arry) {
 		int increment = arry.length - 1;
@@ -133,7 +170,7 @@ public class sort_eight {
 		return Arrays.toString(arry);
 	}
 	
-	//shell sort寻找更好的实现并学习
+	//shell sort寻找到更好的实现并学习
 	/*优点：
 	 * 	1、多个子序列的排序交叉进行，写的可以更简洁
 	 *  2、for循环里贴着一个if判断，可以把判断放到for循环内写
@@ -153,6 +190,9 @@ public class sort_eight {
 	 * for循环的第三部分代表循环步长，因此shell sort的本质，就是不断改变直接插入算法中的步长，来改变插入内容
 	*/
 	public static void insertI(int[] arr, int gap, int i) {
+		//这个方法是插入排序的其中一个人的插入
+		//个人认为这是错位比较、并交换的场景下，最简洁的写法了
+		//！！确实的减少了交换的次数！！
 		int inserted = arr[i];
 		int j;
 		for(j = i - gap; j >= 0 && inserted < arr[j]; j -= gap) {//拿着最后一个值从后往前一个一个比，直到放到合适自己的位置，默认前面内容已排序好
@@ -161,67 +201,24 @@ public class sort_eight {
 		arr[j + gap] = inserted;
 	}
 	
-	//shell sort的步长设置
+
+	//prac3：选择排序：直接选择，堆排序
 	/*
-	 * 塞奇威克Sedgewick，当前最优的shell排序步长设置；
-	 * 优势：在小数组中比快速排序和堆排序还快，但是在涉及大量数据时希尔排序还是比快速排序慢
-	 * 动态increment算法：
-	 * 	初始值-
-	 * 	int increment = 1;
-	 *  while(increment < length / 3) {
-	 *  	increment = 3 * increment + 1;
-	 *  }
-	 *  
-	 *  每步值-
-	 *  increment = (increment -1) / 3;
-	 *  
-	 * 参考：https://www.cnblogs.com/duhuo/p/5088975.html
+	1、说明：
+		每一次遍历，选择出当前遍历过程中的最小值，与当前遍历区间的最左侧交换，缩小遍历区间，重复
+	2、细节优化：
+		可否优化交换次数：222行，224行，228行，减少了交换次数
+		可否优化比较次数：221行，减少了一轮(n)的无意义比较
+	3、复杂度：
+		时间复杂度:O(n^2)
+		空间复杂度：O(1)
+	4、其他：
+		直接选择是不稳定的排序算法：
+		如何理解不稳定：
+			所有相等的数经过某种排序方法后，仍能保持它们在排序之前的相对次序，我们就说这种排序方法是稳定的
+			根据一个关键字进行排序，有可能破坏另一个关键字的顺序，则不稳定
 	*/
-	
-	//静态increment算法：
-	//n偶数用 ：1，19，109，505，2161，...，9（4 k - 2 k）+ 1，k = 0,1,2,3，... 
-	//n奇数用 ：5，41，209，929，3905，...。k + 2（2 k + 2 - 3）+ 1，k = 0,1,2,3，...
-	//参考：https://www.cnblogs.com/daohuoren/p/6614766.html
-//	public static int[] Sedgewick(int length) 
-//    {     
-//        int[] arr = new int[length];
-//        int n,i = 0,j = 0;
-//        for(n = 0; n < length; n++)  
-//        {  
-//            if(n % 2 == 0)  
-//            {  
-//                arr[n] = (int) (9 * ( Math.pow(4, i) - Math.pow(2, i) ) + 1); 
-//                i++;
-//            }  
-//            else  
-//            {  
-//                arr[n] = (int) (Math.pow(2, j+2) * ( Math.pow(2, j+2) - 3 ) + 1); 
-//                j++;  
-//            }  
-//            if(arr[n] >= length)
-//            {  
-//                break;
-//            }
-//        }
-//        int[] a = new int[n];
-//        for(int k = 0; k < a.length; k++){
-//            a[k] = arr[k];
-//        }
-//        System.out.println("步长序列：");
-//        printArray(a,0,1);
-//        return a;
-//    }
-	
-	//prac3：直接选择排序，堆排序
-	/*
-	 * 第一次从R[0]~R[n-1]中选取最小值，与R[0]交换
-	 * 第二次从R1~R[n-1]中选取最小值，与R1交换，….
-	 * 第i次从R[i-1]~R[n-1]中选取最小值，与R[i-1]交换
-	 * …..
-	 * 第n-1次从R[n-2]~R[n-1]中选取最小值，与R[n-2]交换
-	 * 总共通过n-1次，得到一个按排序码从小到大排列的有序序列
-	 * 直接选择排序是一种不稳定的排序算法
-	*/
+
 	public static String prac3_straight_select_sort(int[] arry) {
 		for(int i = 0; i < arry.length - 1; i++){
 			int place = i;//内层每次循环只需记住这层循环里最小值的位置就可以了，然后再拿着位置值和开头的值替换
@@ -238,7 +235,9 @@ public class sort_eight {
 		}
 		return Arrays.toString(arry);
 	}
-	
+
+
+
 	//需再多了解：完美二叉树, 完全二叉树和完满二叉树。https://www.cnblogs.com/idorax/p/6441043.html
 	//完美二叉树（perfect binary tree）：Every node except the leaf nodes have two children and every level (last level too) is completely filled. 除了叶子结点之外的每一个结点都有两个孩子，每一层(当然包含最后一层)都被完全填充
 	//完全二叉树（complete binary tree）：Every level except the last level is completely filled and all the nodes are left justified. 除了最后一层之外的其他每一层都被完全填充，并且所有结点都保持向左对齐。
@@ -247,29 +246,29 @@ public class sort_eight {
 	//完满二叉树   不一定是  完全二叉树
 	//完全二叉树   不一定是  完满二叉树
 	//即使完满二叉树又是完全二叉树   不一定是完美二叉树
-	
-	
-	//堆排序（堆排序(选择排序)，升序排序(最大堆)）https://www.cnblogs.com/Java3y/p/8639937.html
-	//用到了完全二叉树这么一个特性来进行排序
-	//插入-每次向一个数组中插入一个数字时，这个数组本身已经时排好序的了
-	//建堆-一次建堆操作，就像是一次插入操作，是“向下沉”的递归的，把某个数字沉到合适的位置递归截止。
-	//堆排序整体，就像插入排序整体。自底向上，把最大的数字往上挤，在排某一个父与他的两个子的时候，他的两个子已经是当前子树下最大的值了，两个子树已排好序。
-	
-	//对于一个数组，把数组可以看作任意二叉树，二叉树的形式决定了数组下标之间的逻辑关系。
 
+	//堆排序
 	/*
+	1、说明：
+		利用了完全二叉树的特性
+			当树结构为完全二叉树的时候，二叉树可以用数组的形式表示（n、2n+1、2n+2）
+		一次建堆操作，多次下沉操作，完成排序
+			建堆操作：和插入排序的逻辑很像，即向一个已建立好的堆内下沉一个元素，直至所有人都沉了一遍，建堆完毕
+	2、细节优化：
+		可否优化交换的次数：尚未发现
+		可否优化比较的次数：建堆优化，从length/2 - 1 开始建堆
+	3、复杂度：
+		时间复杂度：O(nlog2n)，个人认为堆的时间复杂度计算和二分查找的时间复杂度计算很像
+		空间复杂度：O(1)
+	4、其他：
 		最大堆：根最大，因此小的向下沉
 		最小堆：根最小，因此大的向下沉
 		描述的都是那个尖儿的大小
-		描述下沉：【最大堆】插入一个元素
-			1、与根结点比大小，大于根结点，根结点准备下沉，反之，插入元素准备下沉
-			2、与所在节点位置的两个子节点同时进行比较，选出三者最小，向
-	*/
-
-	//堆排序优化：
-	/*
-	 * 1、最大堆只需要排一次，交换之后只需要沉顶元素就行了
-	 * 2、建堆优化，从length/2 - 1 
+		堆的删除操作：
+			删除堆顶元素，尾元素补上，并下沉
+			删除任意节点元素，尾元素补上，并从补上的位置下沉
+		堆的插入操作：
+			放在最末尾，再上浮（用list可以实现一下）father = n/2
 	*/
 	public static String prac3_heap_sort(int[] arry) {
 		
@@ -289,11 +288,11 @@ public class sort_eight {
 	*/
 	public static void maxheapify(int[] arry, int size) {
 		
-		if(size == arry.length) {
+		if(size == arry.length) {//建堆
 			for(int i = size/2 - 1; i >= 0; i--) {
 				heapify(arry, i, size);
 			}
-		}else {
+		}else {//单次下沉
 			heapify(arry, 0, size);
 		}
 		
@@ -333,6 +332,18 @@ public class sort_eight {
 	//prac4：交换排序：冒泡排序，快速排序
 	
 	//冒泡排序
+	/*
+	1、说明：
+		左右元素依次比较，保证每次比较后，右侧的元素都更大，反复比较arry.len轮
+	2、细节优化：
+		可否减少交换次数：352行，减少了交换次数
+		可否减少比较次数：349行，减少了比较次数
+	3、复杂度：
+		时间复杂度：O(n^2)
+		空间复杂度：O(1)
+	4、其他：
+		冒泡排序是稳定的，而且很关键的是，352行的比较，好像是确保他稳定的原因
+	*/
 	/*
 	 * 将序列当中的左右元素，依次比较，保证右边的元素始终大于左边的元素；
 	 * （ 第一轮结束后，序列最后一个元素一定是当前序列的最大值；）
