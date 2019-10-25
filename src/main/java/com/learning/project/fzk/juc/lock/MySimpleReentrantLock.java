@@ -134,18 +134,24 @@ public class MySimpleReentrantLock {
          */
         protected final boolean tryAcquire(int acquires) {
             final Thread current = Thread.currentThread();
+            // 同步状态，ReentrantLock使用它来表示线程上锁次数
             int c = getState();
             if (c == 0) {
-                if (!hasQueuedPredecessors() &&
-                        compareAndSetState(0, acquires)) {
+                // 锁计数器=0，表示锁未被任何线程获取到
+                // 若没有其他线程等待的时间更长（注意：这是保证公平的条件），那就可以CAS地将锁计数器从0变为1。
+                // 若CAS成功，可将当前线程记录下来；失败，返回false
+                if (!hasQueuedPredecessors() && compareAndSetState(0, acquires)) {
                     setExclusiveOwnerThread(current);
                     return true;
                 }
             }
             else if (current == getExclusiveOwnerThread()) {
+                // 锁计数器不为0，那么只有在线程重入时才能获取锁
                 int nextc = c + acquires;
-                if (nextc < 0)
+                if (nextc < 0) {
                     throw new Error("Maximum lock count exceeded");
+                }
+                // 这里没有用CAS，是因为可重入情况一定在单线程环境下串行执行，无需CAS
                 setState(nextc);
                 return true;
             }
@@ -154,7 +160,7 @@ public class MySimpleReentrantLock {
     }
 
     /**
-     * 创建互斥锁实例
+     * 创建互斥锁实例，默认非公平
      */
     public MySimpleReentrantLock() {
         sync = new NonfairSync();

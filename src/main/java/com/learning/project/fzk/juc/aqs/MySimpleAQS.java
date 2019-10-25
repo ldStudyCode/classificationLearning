@@ -3,11 +3,8 @@ package com.learning.project.fzk.juc.aqs;
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.AbstractOwnableSynchronizer;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.LockSupport;
@@ -17,7 +14,7 @@ import java.util.concurrent.locks.LockSupport;
  *
  * @see com.learning.project.fzk.juc.lock.MyReentrantLock
  */
-public class MySimpleAQS extends AbstractOwnableSynchronizer {
+public class MySimpleAQS extends MyAbstractOwnableSynchronizer {
     protected MySimpleAQS() { }
 
     /**
@@ -59,9 +56,9 @@ public class MySimpleAQS extends AbstractOwnableSynchronizer {
         // 标记节点，表明线程处于排他（独占）锁模式
         static final Node EXCLUSIVE = null;
 
-        /** waitStatus value to indicate thread has cancelled */
+        // 表示线程已经取消
         static final int CANCELLED =  1;
-        /** waitStatus value to indicate successor's thread needs unparking */
+        // 表示后继节点线程需要unpark
         static final int SIGNAL    = -1;
         // 线程处于condition等待中
         static final int CONDITION = -2;
@@ -196,7 +193,7 @@ public class MySimpleAQS extends AbstractOwnableSynchronizer {
 
     // 队列头指针，延迟初始化。除了初始化之外，只有setHead()方法能修改它。
     // 注意，若头指针存在，那么它的waitStatus一定不是CANCELLED状态
-    private transient volatile Node head;
+    private transient volatile Node head; // TODO 确认head到底是不是一个虚拟头结点（哑结点）？画一遍入队、出队的流程
 
     // 队列尾指针，延迟初始化。只有通过enq()方法能添加等待的线程节点
     private transient volatile Node tail;
@@ -204,20 +201,12 @@ public class MySimpleAQS extends AbstractOwnableSynchronizer {
     // 同步状态
     private volatile int state;
 
-    /**
-     * Returns the current value of synchronization state.
-     * This operation has memory semantics of a {@code volatile} read.
-     * @return current state value
-     */
+    // 获取同步状态state，拥有volatile内存语义
     protected final int getState() {
         return state;
     }
 
-    /**
-     * Sets the value of synchronization state.
-     * This operation has memory semantics of a {@code volatile} write.
-     * @param newState the new state value
-     */
+    // 设置同步状态state，拥有volatile内存语义
     protected final void setState(int newState) {
         state = newState;
     }
@@ -274,7 +263,7 @@ public class MySimpleAQS extends AbstractOwnableSynchronizer {
      * 创建一个当前Thread对象的节点，指定模式mode，并入队列
      *
      * @param mode 线程模式，独占（排他）锁：Node.EXCLUSIVE；共享锁：Node.SHARED
-     * @return the new node
+     * @return 新创建的节点
      */
     private Node addWaiter(Node mode) {
         Node node = new Node(Thread.currentThread(), mode);
@@ -332,47 +321,11 @@ public class MySimpleAQS extends AbstractOwnableSynchronizer {
             LockSupport.unpark(s.thread);
     }
 
-    /**
-     * Release action for shared mode -- signals successor and ensures
-     * propagation. (Note: For exclusive mode, release just amounts
-     * to calling unparkSuccessor of head if it needs signal.)
-     */
-    private void doReleaseShared() {
-        /*
-         * Ensure that a release propagates, even if there are other
-         * in-progress acquires/releases.  This proceeds in the usual
-         * way of trying to unparkSuccessor of head if it needs
-         * signal. But if it does not, status is set to PROPAGATE to
-         * ensure that upon release, propagation continues.
-         * Additionally, we must loop in case a new node is added
-         * while we are doing this. Also, unlike other uses of
-         * unparkSuccessor, we need to know if CAS to reset status
-         * fails, if so rechecking.
-         */
-        for (;;) {
-            Node h = head;
-            if (h != null && h != tail) {
-                int ws = h.waitStatus;
-                if (ws == Node.SIGNAL) {
-                    if (!compareAndSetWaitStatus(h, Node.SIGNAL, 0))
-                        continue;            // loop to recheck cases
-                    unparkSuccessor(h);
-                }
-                else if (ws == 0 &&
-                        !compareAndSetWaitStatus(h, 0, Node.PROPAGATE))
-                    continue;                // loop on failed CAS
-            }
-            if (h == head)                   // loop if head changed
-                break;
-        }
-    }
 
     // Utilities for various versions of acquire
 
     /**
-     * Cancels an ongoing attempt to acquire.
-     *
-     * @param node the node
+     * 取消一个运行中的acquire方法（所有acquire通用）
      */
     private void cancelAcquire(Node node) {
         // Ignore if node doesn't exist
@@ -419,16 +372,16 @@ public class MySimpleAQS extends AbstractOwnableSynchronizer {
     }
 
     /**
-     * Checks and updates status for a node that failed to acquire.
-     * Returns true if thread should block. This is the main signal
-     * control in all acquire loops.  Requires that pred == node.prev.
+     * 对一个acquire失败的节点，检查并更新其status值。
+     * 若线程应该阻塞，返回true。这是在所有acquire循环中的信号控制逻辑。需要pred == node.prev
      *
-     * @param pred node's predecessor holding status
-     * @param node the node
-     * @return {@code true} if thread should block
+     * @param pred 前驱节点，持有status属性
+     * @param node 当前节点
+     * @return 若线程应该阻塞，返回true
      */
     private static boolean shouldParkAfterFailedAcquire(Node pred, Node node) {
         int ws = pred.waitStatus;
+        //
         if (ws == Node.SIGNAL)
             /*
              * This node has already set status asking a release
@@ -482,29 +435,37 @@ public class MySimpleAQS extends AbstractOwnableSynchronizer {
      */
 
     /**
-     * Acquires in exclusive uninterruptible mode for thread already in
-     * queue. Used by condition wait methods as well as acquire.
+     * 在排他、不可中断模式下，获取已在队列中的线程。
+     * 用于condition#await()，以及acquire方法
      *
-     * @param node the node
-     * @param arg the acquire argument
-     * @return {@code true} if interrupted while waiting
+     * @param node 队列节点
+     * @param arg acquire参数
+     * @return 若等待中被中断，返回true
      */
     final boolean acquireQueued(final Node node, int arg) {
         boolean failed = true;
         try {
             boolean interrupted = false;
             for (;;) {
+                // 获取前驱节点
                 final Node p = node.predecessor();
+                // TODO 关于哑结点的问题
+                // 由于head是哑结点，因此p==head说明node就是队首节点。那么就可以不停地tryAcquire了
+                // 若node不是队首节点（p!=head），且没有中断信号，那么将一直死循环
                 if (p == head && tryAcquire(arg)) {
+                    // 此时说明，线程是队首元素，且对信号量的操作成功，应把当前节点设置为head节点
+                    // TODO setHead()不需要跟tryAcquire()一起保证原子性吗？
                     setHead(node);
                     p.next = null; // help GC
                     failed = false;
                     return interrupted;
                 }
+                // TODO 待看，如何利用park/unpark实现线程唤醒的
                 if (shouldParkAfterFailedAcquire(p, node) && parkAndCheckInterrupt())
                     interrupted = true;
             }
         } finally {
+            // TODO 待看，处理被中断的情况
             if (failed)
                 cancelAcquire(node);
         }
@@ -627,35 +588,21 @@ public class MySimpleAQS extends AbstractOwnableSynchronizer {
 
 
 
-    // Queue inspection methods
+    // 队列检测方法
 
     /**
-     * Queries whether any threads have been waiting to acquire longer
-     * than the current thread.
+     * 检测是否有其他线程正在CLH队列中等待，且它们比当前线程等待时间更长
+     * （也就是说，在CLH队列中的队首元素，不是当前线程节点，就满足条件。队首元素是等待时间最长的一个）
      *
-     * <p>An invocation of this method is equivalent to (but may be
-     * more efficient than):
-     *  <pre> {@code
-     * getFirstQueuedThread() != Thread.currentThread() &&
-     * hasQueuedThreads()}</pre>
+     * 调用此方法等价于如下形式，但比它更高效：
+     * getFirstQueuedThread() != Thread.currentThread() && hasQueuedThreads()
      *
-     * <p>Note that because cancellations due to interrupts and
-     * timeouts may occur at any time, a {@code true} return does not
-     * guarantee that some other thread will acquire before the current
-     * thread.  Likewise, it is possible for another thread to win a
-     * race to enqueue after this method has returned {@code false},
-     * due to the queue being empty.
+     * 由于任何时候都可能发生由中断、超时引发的操作取消，因此即使返回true，也不保证其他线程在当前线程之前完成acquire操作。
+     * 同样，在当前方法返回false后，其他线程也可能竞争成功，将线程加入队列，因为队列是空的。
      *
-     * <p>This method is designed to be used by a fair synchronizer to
-     * avoid <a href="AbstractQueuedSynchronizer#barging">barging</a>.
-     * Such a synchronizer's {@link #tryAcquire} method should return
-     * {@code false}, and its {@link #tryAcquireShared} method should
-     * return a negative value, if this method returns {@code true}
-     * (unless this is a reentrant acquire).  For example, the {@code
-     * tryAcquire} method for a fair, reentrant, exclusive mode
-     * synchronizer might look like this:
+     * 该方法用于公平的同步器，来避免冲撞（barging，是非公平同步器的插队机制）。
+     * 举例：一个公平的、可重入的、排他模式的同步器tryAcquire()方法是这样子：
      *
-     *  <pre> {@code
      * protected boolean tryAcquire(int arg) {
      *   if (isHeldExclusively()) {
      *     // A reentrant acquire; increment hold count
@@ -665,18 +612,13 @@ public class MySimpleAQS extends AbstractOwnableSynchronizer {
      *   } else {
      *     // try to acquire normally
      *   }
-     * }}</pre>
+     * }
      *
-     * @return {@code true} if there is a queued thread preceding the
-     *         current thread, and {@code false} if the current thread
-     *         is at the head of the queue or the queue is empty
-     * @since 1.7
+     * @return 若CLH队列中有其他线程排在当前线程之前，返回true；若当前线程处于CLH队列头部，或队列为空，返回false
      */
     public final boolean hasQueuedPredecessors() {
-        // The correctness of this depends on head being initialized
-        // before tail and on head.next being accurate if the current
-        // thread is first in queue.
-        Node t = tail; // Read fields in reverse initialization order
+        // 正确性来自于：head要比tail先构造，且如果当前线程是队首元素，那么需要head.next准确。
+        Node t = tail; // 与构造顺序相反地读取属性
         Node h = head;
         Node s;
         return h != t &&
@@ -1209,13 +1151,9 @@ public class MySimpleAQS extends AbstractOwnableSynchronizer {
     }
 
     /**
-     * Setup to support compareAndSet. We need to natively implement
-     * this here: For the sake of permitting future enhancements, we
-     * cannot explicitly subclass AtomicInteger, which would be
-     * efficient and useful otherwise. So, as the lesser of evils, we
-     * natively implement using hotspot intrinsics API. And while we
-     * are at it, we do the same for other CASable fields (which could
-     * otherwise be done with atomic field updaters).
+     * 支持CAS。
+     * 需要直接使用内置Unsafe类来实现CAS操作，而不是继承AtomicInteger，这是为了未来的可扩展性，且性能更高也更实用。
+     * 除此之外，我们也使用内置Unsafe类来实现了其他需要CAS更新的字段，而不是直接使用域更新器（如AtomicReferenceFieldUpdater）
      */
     private static final Unsafe unsafe = getUnsafe(); //Unsafe.getUnsafe(); 由于Unsafe类的限制，只能使用反射来获取Unsafe对象
     private static final long stateOffset;
@@ -1252,36 +1190,23 @@ public class MySimpleAQS extends AbstractOwnableSynchronizer {
         return null;
     }
 
-    /**
-     * CAS head field. Used only by enq.
-     */
+    // CAS设置头结点，只有入队时使用
     private final boolean compareAndSetHead(Node update) {
         return unsafe.compareAndSwapObject(this, headOffset, null, update);
     }
 
-    /**
-     * CAS tail field. Used only by enq.
-     */
+    // CAS设置尾结点，只有入队时使用
     private final boolean compareAndSetTail(Node expect, Node update) {
         return unsafe.compareAndSwapObject(this, tailOffset, expect, update);
     }
 
-    /**
-     * CAS waitStatus field of a node.
-     */
-    private static final boolean compareAndSetWaitStatus(Node node,
-                                                         int expect,
-                                                         int update) {
-        return unsafe.compareAndSwapInt(node, waitStatusOffset,
-                expect, update);
+    // CAS设置waitStatus字段
+    private static final boolean compareAndSetWaitStatus(Node node, int expect, int update) {
+        return unsafe.compareAndSwapInt(node, waitStatusOffset, expect, update);
     }
 
-    /**
-     * CAS next field of a node.
-     */
-    private static final boolean compareAndSetNext(Node node,
-                                                   Node expect,
-                                                   Node update) {
+    // CAS设置next字段
+    private static final boolean compareAndSetNext(Node node, Node expect, Node update) {
         return unsafe.compareAndSwapObject(node, nextOffset, expect, update);
     }
 }
