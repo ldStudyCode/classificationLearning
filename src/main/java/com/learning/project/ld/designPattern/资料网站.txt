@@ -8,3 +8,5 @@ spring mybatis 各版本源码下载地址：https://blog.csdn.net/guo_guo_cai/a
 mybatis源码git地址：https://github.com/mybatis/mybatis-3/releases
 
 git学习：https://blog.csdn.net/oscar999/article/category/9278138
+
+java面试宝典（简书版）：https://www.jianshu.com/p/fb7d48083e5e
