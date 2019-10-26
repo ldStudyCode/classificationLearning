@@ -70,11 +70,11 @@ public class MySimpleAQS extends MyAbstractOwnableSynchronizer {
 
         /**
          * 线程状态，只可能是以下值：
-         * SIGNAL:       后继节点的线程处于（或即将处于）阻塞状态（利用park），因此当前节点必须unpark后继节点
-         * CANCELLED:
+         * SIGNAL:       当前节点表示的线程在释放锁后需要唤醒后继节点的线程；
+         * CANCELLED:    线程等待超时或被中断，取消继续等待。不会再转化为其他状态；
          * CONDITION:
          * PROPAGATE:
-         * 0:
+         * 0:            初始化状态
          *
          *   SIGNAL:     The successor of this node is (or will soon be)
          *               blocked (via park), so the current node must
@@ -374,6 +374,7 @@ public class MySimpleAQS extends MyAbstractOwnableSynchronizer {
     /**
      * 对一个acquire失败的节点，检查并更新其status值。
      * 若线程应该阻塞，返回true。这是在所有acquire循环中的信号控制逻辑。需要pred == node.prev
+     * 只有前驱节点是SIGNAL状态（即前驱节点释放时会自动唤醒当前节点），这样当前线程才能放心的阻塞。
      *
      * @param pred 前驱节点，持有status属性
      * @param node 当前节点
@@ -381,23 +382,19 @@ public class MySimpleAQS extends MyAbstractOwnableSynchronizer {
      */
     private static boolean shouldParkAfterFailedAcquire(Node pred, Node node) {
         int ws = pred.waitStatus;
-        //
+        // 若前一个节点状态是SIGNAL，就应该阻塞。其他情况都不阻塞
         if (ws == Node.SIGNAL)
-            /*
-             * This node has already set status asking a release
-             * to signal it, so it can safely park.
-             */
             return true;
+
+        // 若前一个节点status>0（只可能是CANCELLED=1），说明前一个节点被取消。
+	    // 因此跳过前驱节点，循环向前找到一个非取消状态的节点
         if (ws > 0) {
-            /*
-             * Predecessor was cancelled. Skip over predecessors and
-             * indicate retry.
-             */
             do {
                 node.prev = pred = pred.prev;
             } while (pred.waitStatus > 0);
             pred.next = node;
         } else {
+        	// 状态只可能是0或PROPAGATE，设置为SIGNAL
             /*
              * waitStatus must be 0 or PROPAGATE.  Indicate that we
              * need a signal, but don't park yet.  Caller will need to
@@ -449,18 +446,15 @@ public class MySimpleAQS extends MyAbstractOwnableSynchronizer {
             for (;;) {
                 // 获取前驱节点
                 final Node p = node.predecessor();
-                // TODO 关于哑结点的问题
                 // 由于head是哑结点，因此p==head说明node就是队首节点。那么就可以不停地tryAcquire了
                 // 若node不是队首节点（p!=head），且没有中断信号，那么将一直死循环
                 if (p == head && tryAcquire(arg)) {
                     // 此时说明，线程是队首元素，且对信号量的操作成功，应把当前节点设置为head节点
-                    // TODO setHead()不需要跟tryAcquire()一起保证原子性吗？
                     setHead(node);
                     p.next = null; // help GC
                     failed = false;
                     return interrupted;
                 }
-                // TODO 待看，如何利用park/unpark实现线程唤醒的
                 if (shouldParkAfterFailedAcquire(p, node) && parkAndCheckInterrupt())
                     interrupted = true;
             }
@@ -567,14 +561,8 @@ public class MySimpleAQS extends MyAbstractOwnableSynchronizer {
     }
 
     /**
-     * Releases in exclusive mode.  Implemented by unblocking one or
-     * more threads if {@link #tryRelease} returns true.
-     * This method can be used to implement method {@link Lock#unlock}.
-     *
-     * @param arg the release argument.  This value is conveyed to
-     *        {@link #tryRelease} but is otherwise uninterpreted and
-     *        can represent anything you like.
-     * @return the value returned from {@link #tryRelease}
+     * 释放排他模式的锁。
+     * 若尝试释放方法tryRelease()成功，会唤醒一个或多个线程（去抢夺锁）
      */
     public final boolean release(int arg) {
         if (tryRelease(arg)) {

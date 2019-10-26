@@ -4,11 +4,8 @@ package com.learning.project.fzk.juc.lock;
  * 精简版ReentrantLock，仅用于实现基础的互斥锁功能
  */
 
-import com.learning.project.fzk.juc.aqs.MyAQS;
 import com.learning.project.fzk.juc.aqs.MySimpleAQS;
 
-import java.util.Collection;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 
@@ -27,29 +24,8 @@ public class MySimpleReentrantLock {
          */
         abstract void lock();
 
-        /**
-         * Performs non-fair tryLock.  tryAcquire is implemented in
-         * subclasses, but both need nonfair try for trylock method.
-         */
-        final boolean nonfairTryAcquire(int acquires) {
-            final Thread current = Thread.currentThread();
-            int c = getState();
-            if (c == 0) {
-                if (compareAndSetState(0, acquires)) {
-                    setExclusiveOwnerThread(current);
-                    return true;
-                }
-            }
-            else if (current == getExclusiveOwnerThread()) {
-                int nextc = c + acquires;
-                if (nextc < 0) // overflow
-                    throw new Error("Maximum lock count exceeded");
-                setState(nextc);
-                return true;
-            }
-            return false;
-        }
-
+        // 尝试释放锁的逻辑，即信号量递减。
+        // 只有减到0，表示释放锁成功，否则仍然处于可重入锁状态。
         protected final boolean tryRelease(int releases) {
             int c = getState() - releases;
             if (Thread.currentThread() != getExclusiveOwnerThread())
@@ -73,55 +49,45 @@ public class MySimpleReentrantLock {
             return new ConditionObject();
         }
 
-        // Methods relayed from outer class
-
-        final Thread getOwner() {
-            return getState() == 0 ? null : getExclusiveOwnerThread();
-        }
-
-        final int getHoldCount() {
-            return isHeldExclusively() ? getState() : 0;
-        }
-
-        final boolean isLocked() {
-            return getState() != 0;
-        }
-
-        /**
-         * Reconstitutes the instance from a stream (that is, deserializes it).
-         */
-        private void readObject(java.io.ObjectInputStream s)
-                throws java.io.IOException, ClassNotFoundException {
-            s.defaultReadObject();
-            setState(0); // reset to unlocked state
-        }
     }
 
-    /**
-     * Sync object for non-fair locks
-     */
+	// 非公平锁同步器类
     static final class NonfairSync extends Sync {
-        private static final long serialVersionUID = 7316153563782823691L;
-
-        /**
-         * Performs lock.  Try immediate barge, backing up to normal
-         * acquire on failure.
-         */
+        // 上锁
         final void lock() {
+        	// 首先尝试barge（冲撞，是指插队，CLH队列中还有线程阻塞，这里要是运气好也能抢到锁）
+	        // 这是实现了公平的插队机制的关键
             if (compareAndSetState(0, 1))
                 setExclusiveOwnerThread(Thread.currentThread());
+            // 尝试插队失败，乖乖排队
             else
                 acquire(1);
         }
 
+        // 尝试获取锁
         protected final boolean tryAcquire(int acquires) {
-            return nonfairTryAcquire(acquires);
+	        final Thread current = Thread.currentThread();
+	        int c = getState();
+	        // c=0说明现在没有人占有锁，因此尝试上锁。若CAS失败，则说明尝试失败，返回false
+	        if (c == 0) {
+		        if (compareAndSetState(0, acquires)) {
+			        setExclusiveOwnerThread(current);
+			        return true;
+		        }
+	        }
+	        // c!=0，说明锁正在被某个线程持有，只有是当前线程持有时，才能获取成功
+	        else if (current == getExclusiveOwnerThread()) {
+		        int nextc = c + acquires;
+		        if (nextc < 0) // overflow
+			        throw new Error("Maximum lock count exceeded");
+		        setState(nextc);
+		        return true;
+	        }
+	        return false;
         }
     }
 
-    /**
-     * Sync object for fair locks
-     */
+    // 公平锁同步器类
     static final class FairSync extends Sync {
 
         final void lock() {
@@ -138,7 +104,7 @@ public class MySimpleReentrantLock {
             int c = getState();
             if (c == 0) {
                 // 锁计数器=0，表示锁未被任何线程获取到
-                // 若没有其他线程等待的时间更长（注意：这是保证公平的条件），那就可以CAS地将锁计数器从0变为1。
+                // 若没有其他线程等待的时间更长（注意：这是保证公平的条件，非公平锁没有这一个验证条件），那就可以CAS地将锁计数器从0变为1。
                 // 若CAS成功，可将当前线程记录下来；失败，返回false
                 if (!hasQueuedPredecessors() && compareAndSetState(0, acquires)) {
                     setExclusiveOwnerThread(current);
