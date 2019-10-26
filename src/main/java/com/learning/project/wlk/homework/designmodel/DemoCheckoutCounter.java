@@ -30,8 +30,9 @@ public class DemoCheckoutCounter {
 }
 
 
-
-
+/**
+ * 收银台类，具有收银的功能
+ */
 class CheckoutCounter{
     private int totalGoodCount;
 
@@ -43,6 +44,11 @@ class CheckoutCounter{
         totalOrderActualPrice = 0.0f;
         totalOrderBillPrice = 0.0f;
     }
+
+    /**
+     * 收银的动作
+     * @param order
+     */
     public void Receipt(Order order){
         totalGoodCount+=order.count;
         totalOrderCount++;
@@ -67,11 +73,32 @@ class CheckoutCounter{
     }
 }
 
+/**
+ * 订单类，，
+ */
 class Order{
+    /**
+     * 数量
+     */
     public int count;
+    /**
+     * 单价
+     */
     public float singlePrice;
+
+    /**
+     * 订单金额
+     */
     public float billPrice;
+
+    /**
+     * 实际付款额
+     */
     public float actualPrice ;
+
+    /**
+     * 折扣掉的金额
+     */
     public float discountPrice;
     public List<Discount> discounts;
     public Order(int count,float singlePrice,Discount ...manyDiscounts){
@@ -85,6 +112,11 @@ class Order{
             addDiscounts(dis);
         }
     }
+
+    /**
+     * 反悔直接需要支付的金额
+     * @return
+     */
     public float mustPay(){
         for(Discount discount : discounts){
             discountPrice+=discount.doDiscount(this);
@@ -98,10 +130,23 @@ class Order{
     }
 }
 
+/**
+ * 折扣接口
+ */
 interface Discount{
+    /**
+     * 折扣接口
+     * @param order 对某个具体的订单进行折扣
+     * @return
+     */
     public float doDiscount(Order order);
 }
 
+/**
+ * 折扣的具体实现类
+ *
+ * 满减折扣：满多少减多少
+ */
 class OverMinDiscount implements Discount{
     private float overPrice;
     private  float minusPrice;
@@ -120,6 +165,11 @@ class OverMinDiscount implements Discount{
     }
 }
 
+/**
+ * 折扣的具体实现类
+ *
+ * 打折折扣：类似打8折的那种折扣
+ */
 class PercentageDiscount implements  Discount{
     /**
      * 打折的折数,
