@@ -74,6 +74,7 @@ interface CashSuper{
 class CashReturn implements CashSuper{
     /**
      * 具体算法
+     * 可以存储数据库读取，也可存于缓存之中 ，判断是否满足条件
      * @param money
      * @return
      */
