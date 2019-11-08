@@ -20,19 +20,19 @@ public class JDBCConnection {
         try {
             //加载驱动，根据不同的加载去访问不同的数据库
             Class.forName("com.mysql.jdbc.Driver");
-            String url = "jdbc:mysql://localhost:3306/itheima";
-            String user="";
+            String url = "jdbc:mysql://10.2.21.85:3306/bi1?characterEncoding=UTF-8&serverTimezone=UTC";
+            String user="root";
             String password="";
             //根据数据库连接信息获取数据库连接
             conn= DriverManager.getConnection(url,user,password);
-            String sql="";
+            String sql="select * from study_mybatis_reflect";
             ps = conn.prepareStatement(sql);
             //ResultSet rs = ps.execute();
             //execute方法 会返回true 以及false 只是代表是否有值
             rs = ps.executeQuery();
             while(rs.next()){
-                rs.getString(1);
-                rs.getString("name");
+                System.out.println(rs.getString(1));
+                System.out.println(rs.getString("name"));
             }
         } catch (ClassNotFoundException | SQLException e) {
             e.printStackTrace();
