@@ -2,6 +2,7 @@ package com.learning.project.ld.designPattern.tacticsFactory;
 
 /**
  * 策略模式
+ * 优点待考察？
  * 优点：
  *  解耦
  *  简化了单元测试
