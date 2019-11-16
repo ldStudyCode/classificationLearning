@@ -449,11 +449,7 @@ public class MyAQS extends AbstractOwnableSynchronizer {
     // 同步状态
     private volatile int state;
 
-    /**
-     * Returns the current value of synchronization state.
-     * This operation has memory semantics of a {@code volatile} read.
-     * @return current state value
-     */
+    // 获取同步状态，拥有volatile内存语义
     protected final int getState() {
         return state;
     }
@@ -1369,7 +1365,7 @@ public class MyAQS extends AbstractOwnableSynchronizer {
      * is not the first queued thread.  Used only as a heuristic in
      * ReentrantReadWriteLock.
      */
-    final boolean apparentlyFirstQueuedIsExclusive() {
+    public final boolean apparentlyFirstQueuedIsExclusive() {
         Node h, s;
         return (h = head) != null &&
                 (s = h.next)  != null &&

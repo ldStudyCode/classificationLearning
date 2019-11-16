@@ -157,9 +157,62 @@ AQS中的CLH队列与阻塞队列不同，阻塞队列的出队过程是：多�
 
 
 
-## 1.2 Condition的实现
+## 1.2 Condition
 
-TODO
+### 1.2.1 Condition的作用
+
+Condition的作用是，对线程实现分组阻塞和唤醒，比如阻塞队列 `LinkedBlockingQueue` ，单锁拆分为两个condition，把等待入队和出队的线程分别放在两个condition中，以避免唤醒错误，如入队出队完成后，应指定唤醒一个阻塞中的出队操作。
+
+对照 `Object` 类的 `wait()`和 `notify()` ， `Condition` 的核心方法是 `await()` 和 `signal()` 。假设已经创建了一个 `lock` 对象和对应的条件对象 `condition` 。逻辑如下：
+
+```java
+ReentrantLock lock = new ReentrantLock();
+Condition condition = lock.newCondition();
+```
+
+| Thread1                                  | Thread2                                                |
+| ---------------------------------------- | ------------------------------------------------------ |
+| lock.lock()                              |                                                        |
+| condition.await() // 自动释放锁          |                                                        |
+|                                          | lock.lock() // 抢到锁                                  |
+|                                          | condition.signal() // 当前线程执行完，唤醒队列中的线程 |
+|                                          | lock.unlock()                                          |
+| // 当前线程处于condition队首，于是抢到锁 |                                                        |
+| lock.unlock()                            |                                                        |
+
+### 1.2.2 Condition的实现
+
+要实现这样两个方法，Condition对象内部需要有一个队列来存储阻塞中的线程。由于Condition只适用于排他模式（如互斥锁），因此这个队列的操作只会在单线程环境下完成，不需要线程安全的保证。另外，由于线程阻塞后需要释放锁，因此被唤醒后需要重新抢锁。抢锁的流程是：将condition队列中的线程节点，转移到主队列（等待抢锁的队列）中去。为了节省空间，我们可以让这两个队列共用一个节点类。因此改造一下上面的Node：
+
+```java
+static final class Node {
+  volatile Node prev;
+  volatile Node next;
+  volatile Thread thread;
+  Node nextWaiter; // 单线程操作，不需要保证可见性，因此不需要volatile
+  volatile int waitStatus; // CONDITION/SIGNAL/CANCELLED，区分condition还是主队列节点
+}
+```
+
+这样就实现了两个链表队列共用一个节点类，Thread对象被复用。转移节点时只需要改变节点的状态标识waitStatus就好了。如下图：
+
+![af70b2009a67572203630a51581c2ba.jpg](https://i.loli.net/2019/11/12/PJZpd5A2as9yChO.jpg)
+
+那么为什么不直接把nextWaiter和next域合并呢？反正有状态标志来区分。我的理解是，区别在于是否加volatile，从代码性能上考虑，加了volatile后的内存屏障可能会稍稍影响性能。
+
+最终的 `await()` 和 `signal()` 流程如下：
+
+![85cdcf256f0775a85ecc9ad3ff0df5c.jpg](https://i.loli.net/2019/11/12/dIQrAGvx6oD3N7a.jpg)
+
+
+
+**代码亮点**
+
+1. condition队列和主抢锁队列共用一个链表节点类，以避免多余的内存申请。
+
+**其他await()方法**
+
+`Condition#await()` 的其他重载方法，如阻塞指定时间（ `awaitNanos()` ）、指定截止时间（ `awaitUntil()` ）等， 实现方式与上面大同小异，它们利用的是 `LockSupport` 提供的定时阻塞方法 `parkNanos()` ，因此定时阻塞的实现并不是在Java代码中实现的。
 
 
 
@@ -199,11 +252,31 @@ TODO 画一个好看点的图
 
 
 
+# 3. 读写锁
+
+## 3.1 ReentrantReadWriteLock
+
+### 3.1.1 实现原理
+
+读写锁是共享锁+互斥锁的结合体，写锁的实现原理跟ReentrantLock一样，读锁使用的是AQS中提供的共享锁机制。
+
+由于AQS中只提供了一个int型数字作为信号量，因此将其拆分为两个16位的short值，高、低16位分别代表读锁和写锁的占有次数。写锁每次上锁都加1，读锁每次上锁要加 `1 << 16` 。同时使用 `state >>> 16` 和 `state & (1 << 16 - 1)` 来获取int值的高16位、低16位。
+
+但项目代码中最好不要这么写，会被接手代码的人打死。
+
+下面是读锁（共享锁）的原理：
+
+![40646ed00262db6387a3a03cb809419.jpg](https://i.loli.net/2019/11/16/jkOyNrTpZMPAcWJ.jpg)
+
+思考：为什么读锁的释放需要CAS，而不是像互斥锁一样无CAS保护？
+
+因为读锁是共享锁，可能存在并发解锁的过程。
+
+## 3.2 StampedLock
 
 
 
-
-
+参考资料：[Java多线程进阶（十一）—— J.U.C之locks框架：StampedLock](https://segmentfault.com/a/1190000015808032) 
 
 
 
