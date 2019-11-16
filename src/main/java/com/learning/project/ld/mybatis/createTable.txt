@@ -1,0 +1,2 @@
+create table study_mybatis_reflect (id varchar(32),name varchar(20),age int(3))
+insert into study_mybatis_reflect values (1,'张三',18);

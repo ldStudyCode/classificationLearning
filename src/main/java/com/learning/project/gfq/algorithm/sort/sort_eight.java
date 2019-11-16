@@ -59,7 +59,7 @@ public class sort_eight {
 		}
 		for(int i = 1; i < arry.length; i++) {
 			for(int j = i; j >= 1; j--) {
-				if(arry[j-1] >= arry[j]){
+				if(arry[j-1] > arry[j]){
 					int tmp = arry[j-1];
 					arry[j-1] = arry[j];
 					arry[j] = tmp;
@@ -95,7 +95,8 @@ public class sort_eight {
 			int high = i-1;
 			//二分查找，找到合适的人
 			while(low <= high) {
-				int mid = (low + high)/2;
+				int mid = (low + high)/2;//
+				//int mid = low+(high-low)/2
 				if(arry[i] < arry[mid]){
 					high = mid - 1;
 				}else {
@@ -178,7 +179,8 @@ public class sort_eight {
 	public static String prac2_shell_sort_2(int[] arr) {
 		int length = arr.length;
 		for(int gap = length/2; gap > 0; gap/=2) {//控制gap值
-			for(int i = gap; i < length ; i++) {//这个i的遍历没有错，其实质是多个子序列的排序交叉进行，而不是一个子序列一个子序列的进行排序，写法更简洁
+			for(int i = gap; i < length ; i++) {
+				//这个i的遍历没有错，其实质是多个子序列的排序交叉进行，而不是一个子序列一个子序列的进行排序，写法更简洁
 				insertI(arr, gap, i);
 			}
 		}
@@ -195,7 +197,8 @@ public class sort_eight {
 		//！！确实的减少了交换的次数！！
 		int inserted = arr[i];
 		int j;
-		for(j = i - gap; j >= 0 && inserted < arr[j]; j -= gap) {//拿着最后一个值从后往前一个一个比，直到放到合适自己的位置，默认前面内容已排序好
+		for(j = i - gap; j >= 0 && inserted < arr[j]; j -= gap) {
+			//拿着最后一个值从后往前一个一个比，直到放到合适自己的位置，默认前面内容已排序好
 			arr[j + gap] = arr[j];
 		}
 		arr[j + gap] = inserted;
@@ -250,7 +253,7 @@ public class sort_eight {
 	//堆排序
 	/*
 	1、说明：
-		利用了完全二叉树的特性
+		利用了完全二叉 树的特性
 			当树结构为完全二叉树的时候，二叉树可以用数组的形式表示（n、2n+1、2n+2）
 		一次建堆操作，多次下沉操作，完成排序
 			建堆操作：和插入排序的逻辑很像，即向一个已建立好的堆内下沉一个元素，直至所有人都沉了一遍，建堆完毕

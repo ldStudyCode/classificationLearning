@@ -2,6 +2,7 @@ package com.learning.project.ld.designPattern.tacticsFactory;
 
 /**
  * 策略模式
+ * 优点待考察？
  * 优点：
  *  解耦
  *  简化了单元测试
@@ -74,6 +75,7 @@ interface CashSuper{
 class CashReturn implements CashSuper{
     /**
      * 具体算法
+     * 可以存储数据库读取，也可存于缓存之中 ，判断是否满足条件
      * @param money
      * @return
      */
