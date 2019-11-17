@@ -145,14 +145,11 @@ public class MySimpleAQS extends MyAbstractOwnableSynchronizer {
         volatile Thread thread;
 
         /**
-         * Link to next node waiting on condition, or the special
-         * value SHARED.  Because condition queues are accessed only
-         * when holding in exclusive mode, we just need a simple
-         * linked queue to hold nodes while they are waiting on
-         * conditions. They are then transferred to the queue to
-         * re-acquire. And because conditions can only be exclusive,
-         * we save a field by using special value to indicate shared
-         * mode.
+         * condition队列中的下一个等待节点，或者是特殊值：SHARED共享模式节点。
+         * 由于condition队列只有在排他模式才能被访问，因此只需要一个简单的链表即可。
+         * 这个链表中的线程即将转换为重新获取锁的线程。
+         * 由于condition队列只适用于排他模式，因此当这个字段等于共享模式中的一个特殊值时，
+         * 链表表示的就是共享模式，以此节省了一个字段。
          */
         Node nextWaiter;
 
@@ -432,8 +429,11 @@ public class MySimpleAQS extends MyAbstractOwnableSynchronizer {
      */
 
     /**
-     * 在排他、不可中断模式下，获取已在队列中的线程。
+     * 在排他、不可中断模式下，让已在队列中的线程成功acquire
+     * （对于互斥锁来说，就是成功获取到锁）
      * 用于condition#await()，以及acquire方法
+     *
+     * 注意，这个方法并不会将node加入队列，而是node传进来时本身已经在队列中，该方法只是不停的自旋、尝试获取锁，直到成功
      *
      * @param node 队列节点
      * @param arg acquire参数
@@ -616,10 +616,7 @@ public class MySimpleAQS extends MyAbstractOwnableSynchronizer {
     // Internal support methods for Conditions
 
     /**
-     * Returns true if a node, always one that was initially placed on
-     * a condition queue, is now waiting to reacquire on sync queue.
-     * @param node the node
-     * @return true if is reacquiring
+     * 判断一个在condition队列中初始化的节点：是否正在等待重新获取锁
      */
     final boolean isOnSyncQueue(Node node) {
         if (node.waitStatus == Node.CONDITION || node.prev == null)
@@ -638,9 +635,7 @@ public class MySimpleAQS extends MyAbstractOwnableSynchronizer {
     }
 
     /**
-     * Returns true if node is on sync queue by searching backwards from tail.
-     * Called only when needed by isOnSyncQueue.
-     * @return true if present
+     * 从后向前遍历主队列，看node节点是否在主队列上
      */
     private boolean findNodeFromTail(Node node) {
         Node t = tail;
@@ -654,19 +649,15 @@ public class MySimpleAQS extends MyAbstractOwnableSynchronizer {
     }
 
     /**
-     * Transfers a node from a condition queue onto sync queue.
-     * Returns true if successful.
-     * @param node the node
-     * @return true if successfully transferred (else the node was
-     * cancelled before signal)
+     * 将一个节点从condition队列转移到抢锁（sync）的队列中
+     * @return 若signal之前被取消，则返回false
      */
     final boolean transferForSignal(Node node) {
-        /*
-         * If cannot change waitStatus, the node has been cancelled.
-         */
+    	// 若waitStatus不是CONDITION，说明被取消了
         if (!compareAndSetWaitStatus(node, Node.CONDITION, 0))
             return false;
 
+        // 线程安全地入队列
         /*
          * Splice onto queue and try to set waitStatus of predecessor to
          * indicate that thread is (probably) waiting. If cancelled or
@@ -674,6 +665,7 @@ public class MySimpleAQS extends MyAbstractOwnableSynchronizer {
          * case the waitStatus can be transiently and harmlessly wrong).
          */
         Node p = enq(node);
+        // CAS设置waitStatus为SIGNAL
         int ws = p.waitStatus;
         if (ws > 0 || !compareAndSetWaitStatus(p, ws, Node.SIGNAL))
             LockSupport.unpark(node.thread);
@@ -704,7 +696,7 @@ public class MySimpleAQS extends MyAbstractOwnableSynchronizer {
     }
 
     /**
-     * Invokes release with current state value; returns saved state.
+     * 释放当前的状态值，并返回释放了多少个。
      * Cancels node and throws exception on failure.
      * @param node the condition node for this wait
      * @return previous sync state
@@ -740,32 +732,30 @@ public class MySimpleAQS extends MyAbstractOwnableSynchronizer {
      * <p>This class is Serializable, but all fields are transient,
      * so deserialized conditions have no waiters.
      */
-    public class ConditionObject implements Condition, java.io.Serializable {
-        private static final long serialVersionUID = 1173984872572414699L;
-        /** First node of condition queue. */
+    public class ConditionObject implements Condition {
+        // condition队列的首节点
         private transient Node firstWaiter;
-        /** Last node of condition queue. */
+        // condition队列的尾节点
         private transient Node lastWaiter;
 
-        /**
-         * Creates a new {@code ConditionObject} instance.
-         */
         public ConditionObject() { }
 
-        // Internal methods
-
         /**
-         * Adds a new waiter to wait queue.
-         * @return its new wait node
+         * 添加等待的线程（当前线程）
+         *
+         * @return 新的等待线程
          */
         private Node addConditionWaiter() {
             Node t = lastWaiter;
-            // If lastWaiter is cancelled, clean out.
+            // 若最后等待线程的节点被取消（非CONDITION状态），则清除这些无效节点
             if (t != null && t.waitStatus != Node.CONDITION) {
                 unlinkCancelledWaiters();
                 t = lastWaiter;
             }
+            // 创建当前线程节点
             Node node = new Node(Thread.currentThread(), Node.CONDITION);
+            // 构建链表（最简单的链表，无虚拟头结点）
+	        // 由于只有拿到锁（单线程）时才能访问condition队列，因此是不需要CAS等同步机制的
             if (t == null)
                 firstWaiter = node;
             else
@@ -775,6 +765,7 @@ public class MySimpleAQS extends MyAbstractOwnableSynchronizer {
         }
 
         /**
+         *
          * Removes and transfers nodes until hit non-cancelled one or
          * null. Split out from signal in part to encourage compilers
          * to inline the case of no waiters.
@@ -782,9 +773,11 @@ public class MySimpleAQS extends MyAbstractOwnableSynchronizer {
          */
         private void doSignal(Node first) {
             do {
+            	// 移除单链表队列的头结点
                 if ( (firstWaiter = first.nextWaiter) == null)
                     lastWaiter = null;
-                first.nextWaiter = null;
+                // first已经变成了孤立的线程
+	            first.nextWaiter = null;
             } while (!transferForSignal(first) &&
                     (first = firstWaiter) != null);
         }
@@ -804,6 +797,7 @@ public class MySimpleAQS extends MyAbstractOwnableSynchronizer {
         }
 
         /**
+         * 把取消状态的节点清除出condition队列。
          * Unlinks cancelled waiter nodes from condition queue.
          * Called only while holding lock. This is called when
          * cancellation occurred during condition wait, and upon
@@ -840,12 +834,7 @@ public class MySimpleAQS extends MyAbstractOwnableSynchronizer {
         // public methods
 
         /**
-         * Moves the longest-waiting thread, if one exists, from the
-         * wait queue for this condition to the wait queue for the
-         * owning lock.
-         *
-         * @throws IllegalMonitorStateException if {@link #isHeldExclusively}
-         *         returns {@code false}
+         * 唤醒：将等待时间最长的线程，从condition队列移动到获取锁的队列
          */
         public final void signal() {
             if (!isHeldExclusively())
@@ -921,8 +910,7 @@ public class MySimpleAQS extends MyAbstractOwnableSynchronizer {
          * Throws InterruptedException, reinterrupts current thread, or
          * does nothing, depending on mode.
          */
-        private void reportInterruptAfterWait(int interruptMode)
-                throws InterruptedException {
+        private void reportInterruptAfterWait(int interruptMode) throws InterruptedException {
             if (interruptMode == THROW_IE)
                 throw new InterruptedException();
             else if (interruptMode == REINTERRUPT)
@@ -930,9 +918,10 @@ public class MySimpleAQS extends MyAbstractOwnableSynchronizer {
         }
 
         /**
-         * Implements interruptible condition wait.
-         * <ol>
-         * <li> If current thread is interrupted, throw InterruptedException.
+         * 可中断的阻塞实现
+         *
+         * 若当前线程被中断，抛出InterruptedException；
+         *
          * <li> Save lock state returned by {@link #getState}.
          * <li> Invoke {@link #release} with saved state as argument,
          *      throwing IllegalMonitorStateException if it fails.
@@ -943,16 +932,21 @@ public class MySimpleAQS extends MyAbstractOwnableSynchronizer {
          * </ol>
          */
         public final void await() throws InterruptedException {
+        	// 首先检测线程中断
             if (Thread.interrupted())
                 throw new InterruptedException();
+            // 当前线程入condition队列
             Node node = addConditionWaiter();
+            // 全部线程release，相当于解锁（await解锁就是在这里完成的）
             int savedState = fullyRelease(node);
             int interruptMode = 0;
+            // 若这个节点不在主（sync）队列中，则阻塞
             while (!isOnSyncQueue(node)) {
                 LockSupport.park(this);
                 if ((interruptMode = checkInterruptWhileWaiting(node)) != 0)
                     break;
             }
+            // 此时，节点已经在主队列中准备抢锁了，开始抢锁
             if (acquireQueued(node, savedState) && interruptMode != THROW_IE)
                 interruptMode = REINTERRUPT;
             if (node.nextWaiter != null) // clean up if cancelled
@@ -974,8 +968,7 @@ public class MySimpleAQS extends MyAbstractOwnableSynchronizer {
          * <li> If interrupted while blocked in step 4, throw InterruptedException.
          * </ol>
          */
-        public final long awaitNanos(long nanosTimeout)
-                throws InterruptedException {
+        public final long awaitNanos(long nanosTimeout) throws InterruptedException {
             if (Thread.interrupted())
                 throw new InterruptedException();
             Node node = addConditionWaiter();
@@ -1016,8 +1009,7 @@ public class MySimpleAQS extends MyAbstractOwnableSynchronizer {
          * <li> If timed out while blocked in step 4, return false, else true.
          * </ol>
          */
-        public final boolean awaitUntil(Date deadline)
-                throws InterruptedException {
+        public final boolean awaitUntil(Date deadline) throws InterruptedException {
             long abstime = deadline.getTime();
             if (Thread.interrupted())
                 throw new InterruptedException();
@@ -1057,8 +1049,7 @@ public class MySimpleAQS extends MyAbstractOwnableSynchronizer {
          * <li> If timed out while blocked in step 4, return false, else true.
          * </ol>
          */
-        public final boolean await(long time, TimeUnit unit)
-                throws InterruptedException {
+        public final boolean await(long time, TimeUnit unit) throws InterruptedException {
             long nanosTimeout = unit.toNanos(time);
             if (Thread.interrupted())
                 throw new InterruptedException();
@@ -1086,59 +1077,224 @@ public class MySimpleAQS extends MyAbstractOwnableSynchronizer {
                 reportInterruptAfterWait(interruptMode);
             return !timedout;
         }
-
-        //  support for instrumentation
-
-        /**
-         * Returns true if this condition was created by the given
-         * synchronization object.
-         *
-         * @return {@code true} if owned
-         */
-        final boolean isOwnedBy(MySimpleAQS sync) {
-            return sync == MySimpleAQS.this;
-        }
-
-        /**
-         * Queries whether any threads are waiting on this condition.
-         * Implements {@link MySimpleAQS#hasWaiters(ConditionObject)}.
-         *
-         * @return {@code true} if there are any waiting threads
-         * @throws IllegalMonitorStateException if {@link #isHeldExclusively}
-         *         returns {@code false}
-         */
-        protected final boolean hasWaiters() {
-            if (!isHeldExclusively())
-                throw new IllegalMonitorStateException();
-            for (Node w = firstWaiter; w != null; w = w.nextWaiter) {
-                if (w.waitStatus == Node.CONDITION)
-                    return true;
-            }
-            return false;
-        }
-
-        /**
-         * Returns an estimate of the number of threads waiting on
-         * this condition.
-         * Implements {@link MySimpleAQS#getWaitQueueLength(ConditionObject)}.
-         *
-         * @return the estimated number of waiting threads
-         * @throws IllegalMonitorStateException if {@link #isHeldExclusively}
-         *         returns {@code false}
-         */
-        protected final int getWaitQueueLength() {
-            if (!isHeldExclusively())
-                throw new IllegalMonitorStateException();
-            int n = 0;
-            for (Node w = firstWaiter; w != null; w = w.nextWaiter) {
-                if (w.waitStatus == Node.CONDITION)
-                    ++n;
-            }
-            return n;
-        }
     }
 
-    /**
+	/**
+	 * Returns {@code true} if the apparent first queued thread, if one
+	 * exists, is waiting in exclusive mode.  If this method returns
+	 * {@code true}, and the current thread is attempting to acquire in
+	 * shared mode (that is, this method is invoked from tryAcquireShared
+	 * then it is guaranteed that the current thread
+	 * is not the first queued thread.  Used only as a heuristic in
+	 * ReentrantReadWriteLock.
+	 */
+	public final boolean apparentlyFirstQueuedIsExclusive() {
+		Node h, s;
+		return (h = head) != null &&
+				(s = h.next)  != null &&
+				!s.isShared()         &&
+				s.thread != null;
+	}
+
+	/**
+	 * Acquires in shared mode, ignoring interrupts.  Implemented by
+	 * first invoking at least once {@link #tryAcquireShared},
+	 * returning on success.  Otherwise the thread is queued, possibly
+	 * repeatedly blocking and unblocking, invoking {@link
+	 * #tryAcquireShared} until success.
+	 *
+	 * @param arg the acquire argument.  This value is conveyed to
+	 *        {@link #tryAcquireShared} but is otherwise uninterpreted
+	 *        and can represent anything you like.
+	 */
+	// 获取共享锁（写锁）
+	public final void acquireShared(int arg) {
+		if (tryAcquireShared(arg) < 0)
+			doAcquireShared(arg);
+	}
+
+	/**
+	 * Attempts to acquire in shared mode. This method should query if
+	 * the state of the object permits it to be acquired in the shared
+	 * mode, and if so to acquire it.
+	 *
+	 * <p>This method is always invoked by the thread performing
+	 * acquire.  If this method reports failure, the acquire method
+	 * may queue the thread, if it is not already queued, until it is
+	 * signalled by a release from some other thread.
+	 *
+	 * <p>The default implementation throws {@link
+	 * UnsupportedOperationException}.
+	 *
+	 * @param arg the acquire argument. This value is always the one
+	 *        passed to an acquire method, or is the value saved on entry
+	 *        to a condition wait.  The value is otherwise uninterpreted
+	 *        and can represent anything you like.
+	 * @return a negative value on failure; zero if acquisition in shared
+	 *         mode succeeded but no subsequent shared-mode acquire can
+	 *         succeed; and a positive value if acquisition in shared
+	 *         mode succeeded and subsequent shared-mode acquires might
+	 *         also succeed, in which case a subsequent waiting thread
+	 *         must check availability. (Support for three different
+	 *         return values enables this method to be used in contexts
+	 *         where acquires only sometimes act exclusively.)  Upon
+	 *         success, this object has been acquired.
+	 * @throws IllegalMonitorStateException if acquiring would place this
+	 *         synchronizer in an illegal state. This exception must be
+	 *         thrown in a consistent fashion for synchronization to work
+	 *         correctly.
+	 * @throws UnsupportedOperationException if shared mode is not supported
+	 */
+	protected int tryAcquireShared(int arg) {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * Acquires in shared uninterruptible mode.
+	 * @param arg the acquire argument
+	 */
+	private void doAcquireShared(int arg) {
+		final Node node = addWaiter(Node.SHARED);
+		boolean failed = true;
+		try {
+			boolean interrupted = false;
+			for (;;) {
+				final Node p = node.predecessor();
+				if (p == head) {
+					int r = tryAcquireShared(arg);
+					if (r >= 0) {
+						setHeadAndPropagate(node, r);
+						p.next = null; // help GC
+						if (interrupted)
+							selfInterrupt();
+						failed = false;
+						return;
+					}
+				}
+				if (shouldParkAfterFailedAcquire(p, node) &&
+						parkAndCheckInterrupt())
+					interrupted = true;
+			}
+		} finally {
+			if (failed)
+				cancelAcquire(node);
+		}
+	}
+
+	/**
+	 * Releases in shared mode.  Implemented by unblocking one or more
+	 * threads if {@link #tryReleaseShared} returns true.
+	 *
+	 * @param arg the release argument.  This value is conveyed to
+	 *        {@link #tryReleaseShared} but is otherwise uninterpreted
+	 *        and can represent anything you like.
+	 * @return the value returned from {@link #tryReleaseShared}
+	 */
+	public final boolean releaseShared(int arg) {
+		if (tryReleaseShared(arg)) {
+			doReleaseShared();
+			return true;
+		}
+		return false;
+	}
+	/**
+	 * Attempts to set the state to reflect a release in shared mode.
+	 *
+	 * <p>This method is always invoked by the thread performing release.
+	 *
+	 * <p>The default implementation throws
+	 * {@link UnsupportedOperationException}.
+	 *
+	 * @param arg the release argument. This value is always the one
+	 *        passed to a release method, or the current state value upon
+	 *        entry to a condition wait.  The value is otherwise
+	 *        uninterpreted and can represent anything you like.
+	 * @return {@code true} if this release of shared mode may permit a
+	 *         waiting acquire (shared or exclusive) to succeed; and
+	 *         {@code false} otherwise
+	 * @throws IllegalMonitorStateException if releasing would place this
+	 *         synchronizer in an illegal state. This exception must be
+	 *         thrown in a consistent fashion for synchronization to work
+	 *         correctly.
+	 * @throws UnsupportedOperationException if shared mode is not supported
+	 */
+	protected boolean tryReleaseShared(int arg) {
+		throw new UnsupportedOperationException();
+	}
+
+
+	/**
+	 * Sets head of queue, and checks if successor may be waiting
+	 * in shared mode, if so propagating if either propagate > 0 or
+	 * PROPAGATE status was set.
+	 *
+	 * @param node the node
+	 * @param propagate the return value from a tryAcquireShared
+	 */
+	private void setHeadAndPropagate(Node node, int propagate) {
+		Node h = head; // Record old head for check below
+		setHead(node);
+		/*
+		 * Try to signal next queued node if:
+		 *   Propagation was indicated by caller,
+		 *     or was recorded (as h.waitStatus either before
+		 *     or after setHead) by a previous operation
+		 *     (note: this uses sign-check of waitStatus because
+		 *      PROPAGATE status may transition to SIGNAL.)
+		 * and
+		 *   The next node is waiting in shared mode,
+		 *     or we don't know, because it appears null
+		 *
+		 * The conservatism in both of these checks may cause
+		 * unnecessary wake-ups, but only when there are multiple
+		 * racing acquires/releases, so most need signals now or soon
+		 * anyway.
+		 */
+		if (propagate > 0 || h == null || h.waitStatus < 0 ||
+				(h = head) == null || h.waitStatus < 0) {
+			Node s = node.next;
+			if (s == null || s.isShared())
+				doReleaseShared();
+		}
+	}
+
+	/**
+	 * Release action for shared mode -- signals successor and ensures
+	 * propagation. (Note: For exclusive mode, release just amounts
+	 * to calling unparkSuccessor of head if it needs signal.)
+	 */
+	// 释放共享锁
+	private void doReleaseShared() {
+		/*
+		 * Ensure that a release propagates, even if there are other
+		 * in-progress acquires/releases.  This proceeds in the usual
+		 * way of trying to unparkSuccessor of head if it needs
+		 * signal. But if it does not, status is set to PROPAGATE to
+		 * ensure that upon release, propagation continues.
+		 * Additionally, we must loop in case a new node is added
+		 * while we are doing this. Also, unlike other uses of
+		 * unparkSuccessor, we need to know if CAS to reset status
+		 * fails, if so rechecking.
+		 */
+		for (;;) {
+			Node h = head;
+			if (h != null && h != tail) {
+				int ws = h.waitStatus;
+				if (ws == Node.SIGNAL) {
+					if (!compareAndSetWaitStatus(h, Node.SIGNAL, 0))
+						continue;            // loop to recheck cases
+					unparkSuccessor(h);
+				}
+				else if (ws == 0 &&
+						!compareAndSetWaitStatus(h, 0, Node.PROPAGATE))
+					continue;                // loop on failed CAS
+			}
+			if (h == head)                   // loop if head changed
+				break;
+		}
+	}
+
+	/**
      * 支持CAS。
      * 需要直接使用内置Unsafe类来实现CAS操作，而不是继承AtomicInteger，这是为了未来的可扩展性，且性能更高也更实用。
      * 除此之外，我们也使用内置Unsafe类来实现了其他需要CAS更新的字段，而不是直接使用域更新器（如AtomicReferenceFieldUpdater）

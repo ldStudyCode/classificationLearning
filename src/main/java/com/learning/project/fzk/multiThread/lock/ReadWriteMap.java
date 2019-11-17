@@ -1,8 +1,11 @@
 package com.learning.project.fzk.multiThread.lock;
 
+import com.learning.project.fzk.juc.lock.MyReentrantReadWriteLock;
+import com.learning.project.fzk.juc.lock.MySimpleLock;
+
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * 一个支持读写锁的map
@@ -12,11 +15,17 @@ public class ReadWriteMap<K, V> {
 
 	private final Map<K, V> map;
 
-	private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-	private final Lock readLock = lock.readLock();
-	private final Lock writeLock = lock.writeLock();
+	private final MyReentrantReadWriteLock lock = new MyReentrantReadWriteLock();
+	private final MySimpleLock readLock = lock.readLock();
+	private final MySimpleLock writeLock = lock.writeLock();
+
+	public ReadWriteMap() {
+		this.map = new HashMap();
+	}
 
 	public ReadWriteMap(Map map) {
+		if (map == null)
+			map = new HashMap();
 		this.map = map;
 	}
 
