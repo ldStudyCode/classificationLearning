@@ -8,11 +8,14 @@ package com.learning.project.ld.thread;
  * 不使用自定义标识，无法在sleep检测到中断
  * 设置为守护线程之后会随着主线程的销毁而销毁，不在守护线程的finally写释放代码，因为守护线程的finally不一定执行
  * join 方法保证线程需在某线程之后执行
+ * sync
  */
 public class ThreadFirstLesson {
     public static void main(String[] args){
-        SyncTest.syncStatic();
-        SyncTest.syncClass();
+        ErrorInstanceCodeThread errorInstanceCodeThread = new ErrorInstanceCodeThread(1);
+        for(int i =0;i<5;i++){
+            new Thread(errorInstanceCodeThread).start();
+        }
 
     }
 }
@@ -88,5 +91,22 @@ class SyncTest{
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+}
+class ErrorInstanceCodeThread implements Runnable {
+    private Integer i;
+    public ErrorInstanceCodeThread(Integer i){
+        this.i=i;
+    }
+    public static void main(String[] args){
+
+    }
+    @Override
+    public void run() {
+        //此处问题由于i对象一直在发生变化，所以会出现问题
+        synchronized (i){
+            i++;
+        }
+        System.out.println("i value："+i);
     }
 }
