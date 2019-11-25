@@ -1,7 +1,11 @@
 package com.learning.project.ld.algorithm;
 
+import com.google.gson.internal.$Gson$Types;
+
+import javax.sound.midi.SysexMessage;
 import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.Stack;
 
 /**
  * 自实现二叉树
@@ -52,6 +56,93 @@ public class BinaryTree {
     }
 
     /**
+     * 前序遍历 使用stack进行遍历未判断是否重复
+     * @param treeNode
+     */
+    public static void stackOrderTraveral(TreeNode treeNode){
+        Stack<TreeNode> stack = new Stack<TreeNode>();
+        //first 元素插入
+        stack.push(treeNode);
+        while(stack.peek()!=null){
+            //同时满足左右子节点有值
+            if(stack.peek().leftTreeNode!=null){
+                System.out.println(stack.peek().data);
+                stack.push(stack.peek().leftTreeNode);
+            }else if(stack.peek().rightTreeNode!=null){
+                System.out.println(stack.peek().data);
+                stack.push(stack.peek().rightTreeNode);
+            }else{
+                System.out.println(stack.peek().data);
+                break;
+            }
+        }
+        while(!stack.empty()){
+            TreeNode treeNodeTemp = stack.pop();
+            TreeNode childRoot = stack.peek();
+            if(childRoot.leftTreeNode==treeNodeTemp){
+                if(childRoot.rightTreeNode!=null){
+                    stack.push(childRoot.rightTreeNode);
+                    while(stack.peek()!=null){
+                        if(stack.peek().leftTreeNode!=null){
+                            System.out.println(stack.peek().data);
+                            stack.push(stack.peek().leftTreeNode);
+                        }else if(stack.peek().rightTreeNode!=null){
+                            System.out.println(stack.peek().data);
+                            stack.push(stack.peek().rightTreeNode);
+                        }else{
+                            System.out.println(stack.peek().data);
+                            break;
+                        }
+                    }
+                }
+            }else if (childRoot.rightTreeNode==treeNode){
+
+            }
+        }
+        /*
+        if(treeNode.rightTreeNode!=null){
+            System.out.println(treeNode.rightTreeNode);
+            stack.push(treeNode.rightTreeNode);
+        }
+        while(stack.peek()!=null){
+            //同时满足左右子节点有值
+            if(stack.peek().leftTreeNode!=null){
+                System.out.println(stack.peek().data);
+                stack.push(stack.peek().leftTreeNode);
+            }else if(stack.peek().rightTreeNode!=null){
+                System.out.println(stack.peek().data);
+                stack.push(stack.peek().rightTreeNode);
+            }else{
+                System.out.println(stack.peek().data);
+                break;
+            }
+        }
+        while(!stack.empty()){
+            TreeNode treeNodeTemp = stack.pop();
+            TreeNode childRoot = stack.peek();
+            if(childRoot.leftTreeNode==treeNodeTemp){
+                if(childRoot.rightTreeNode!=null){
+                    stack.push(childRoot.rightTreeNode);
+                    while(stack.peek()!=null){
+                        if(stack.peek().leftTreeNode!=null){
+                            System.out.println(stack.peek().data);
+                            stack.push(stack.peek().leftTreeNode);
+                        }else if(stack.peek().rightTreeNode!=null){
+                            System.out.println(stack.peek().data);
+                            stack.push(stack.peek().rightTreeNode);
+                        }else{
+                            System.out.println(stack.peek().data);
+                            break;
+                        }
+                    }
+                }
+            }else if (childRoot.rightTreeNode==treeNode){
+
+            }
+        }*/
+    }
+
+    /**
      * 中序遍历
      * @param treeNode
      */
@@ -75,11 +166,12 @@ public class BinaryTree {
         LinkedList<Integer> integerLinkedList = new LinkedList<Integer>(Arrays.asList(new Integer[]{3,2,9,null,null,10,null,null,8,null,4}));
         TreeNode treeNode = createBinaryTree(integerLinkedList);
         System.out.println("前序遍历");
-        preOrderTraveral(treeNode);
+        //preOrderTraveral(treeNode);
+        stackOrderTraveral(treeNode);
         System.out.println("中序遍历");
-        centerOrderTraveral(treeNode);
+        //centerOrderTraveral(treeNode);
         System.out.println("后序遍历");
-        backOrderTraveral(treeNode);
+        //backOrderTraveral(treeNode);
 
     }
 }
