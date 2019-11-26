@@ -103,7 +103,7 @@ public class BinaryTree {
                     }
                 }
             }else if(childRoot.rightTreeNode==treeNodeTemp){
-                System.out.println("遍历右侧"+treeNodeTemp.data);
+                //System.out.println("遍历右侧"+treeNodeTemp.data);
 
             }
         }
@@ -171,7 +171,7 @@ public class BinaryTree {
     }
 
     public static void main(String[] args){
-        LinkedList<Integer> integerLinkedList = new LinkedList<Integer>(Arrays.asList(new Integer[]{3,2,9,null,null,10,null,null,8,null,4}));
+        LinkedList<Integer> integerLinkedList = new LinkedList<Integer>(Arrays.asList(new Integer[]{3,2,9,null,null,10,null,7,null,null,8,null,4}));
         TreeNode treeNode = createBinaryTree(integerLinkedList);
         System.out.println("前序遍历");
         //preOrderTraveral(treeNode);
