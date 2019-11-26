@@ -102,52 +102,9 @@ public class BinaryTree {
                         }
                     }
                 }
-            }else if(childRoot.rightTreeNode==treeNodeTemp){
-                //System.out.println("遍历右侧"+treeNodeTemp.data);
+            }
+        }
 
-            }
-        }
-        /*
-        if(treeNode.rightTreeNode!=null){
-            System.out.println(treeNode.rightTreeNode);
-            stack.push(treeNode.rightTreeNode);
-        }
-        while(stack.peek()!=null){
-            //同时满足左右子节点有值
-            if(stack.peek().leftTreeNode!=null){
-                System.out.println(stack.peek().data);
-                stack.push(stack.peek().leftTreeNode);
-            }else if(stack.peek().rightTreeNode!=null){
-                System.out.println(stack.peek().data);
-                stack.push(stack.peek().rightTreeNode);
-            }else{
-                System.out.println(stack.peek().data);
-                break;
-            }
-        }
-        while(!stack.empty()){
-            TreeNode treeNodeTemp = stack.pop();
-            TreeNode childRoot = stack.peek();
-            if(childRoot.leftTreeNode==treeNodeTemp){
-                if(childRoot.rightTreeNode!=null){
-                    stack.push(childRoot.rightTreeNode);
-                    while(stack.peek()!=null){
-                        if(stack.peek().leftTreeNode!=null){
-                            System.out.println(stack.peek().data);
-                            stack.push(stack.peek().leftTreeNode);
-                        }else if(stack.peek().rightTreeNode!=null){
-                            System.out.println(stack.peek().data);
-                            stack.push(stack.peek().rightTreeNode);
-                        }else{
-                            System.out.println(stack.peek().data);
-                            break;
-                        }
-                    }
-                }
-            }else if (childRoot.rightTreeNode==treeNode){
-
-            }
-        }*/
     }
 
     /**
