@@ -5,6 +5,7 @@ import com.google.gson.internal.$Gson$Types;
 import javax.sound.midi.SysexMessage;
 import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Stack;
 
 /**
@@ -63,6 +64,8 @@ public class BinaryTree {
         Stack<TreeNode> stack = new Stack<TreeNode>();
         //first 元素插入
         stack.push(treeNode);
+        //遍历最左侧全部元素
+        //前序遍历
         while(stack.peek()!=null){
             //同时满足左右子节点有值
             if(stack.peek().leftTreeNode!=null){
@@ -76,8 +79,12 @@ public class BinaryTree {
                 break;
             }
         }
+
         while(!stack.empty()){
             TreeNode treeNodeTemp = stack.pop();
+            if(stack.empty()){
+                break;
+            }
             TreeNode childRoot = stack.peek();
             if(childRoot.leftTreeNode==treeNodeTemp){
                 if(childRoot.rightTreeNode!=null){
@@ -95,7 +102,8 @@ public class BinaryTree {
                         }
                     }
                 }
-            }else if (childRoot.rightTreeNode==treeNode){
+            }else if(childRoot.rightTreeNode==treeNodeTemp){
+                System.out.println("遍历右侧"+treeNodeTemp.data);
 
             }
         }
