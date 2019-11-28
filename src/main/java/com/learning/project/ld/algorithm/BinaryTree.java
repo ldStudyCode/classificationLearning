@@ -108,28 +108,31 @@ public class BinaryTree {
 
     }
 
+    /**
+     * 使用stack实现中序遍历
+     * @param treeNode
+     */
     public static void centerOrderStackTraveral(TreeNode treeNode){
         Stack<TreeNode> stack = new Stack<TreeNode>();
         //first node
         stack.push(treeNode);
         //遍历左侧最低端节点
         while(stack.peek()!=null){
-            //同时满足左右子节点有值
+            //同时满足左子节点有值
             if(stack.peek().leftTreeNode!=null){
                 stack.push(stack.peek().leftTreeNode);
             }else{
                 break;
             }
         }
-
         while(!stack.empty()){
             TreeNode childTreeNode = stack.pop();
+            System.out.println(childTreeNode.data);
             if(childTreeNode.rightTreeNode!=null){
                 stack.push(childTreeNode.rightTreeNode);
-
-
-            }else{
-                System.out.println(childTreeNode.data);
+                while(stack.peek().leftTreeNode!=null){
+                    stack.push(stack.peek().leftTreeNode);
+                }
             }
         }
 
@@ -147,6 +150,14 @@ public class BinaryTree {
         centerOrderTraveral(treeNode.rightTreeNode);
     }
 
+    /**
+     * 使用stack实现后序遍历
+     * @param treeNode
+     */
+    public static void backStackTraveral(TreeNode treeNode){
+
+    }
+
     public static void backOrderTraveral(TreeNode treeNode){
         if(treeNode==null)
             return;
@@ -158,11 +169,12 @@ public class BinaryTree {
     public static void main(String[] args){
         LinkedList<Integer> integerLinkedList = new LinkedList<Integer>(Arrays.asList(new Integer[]{3,2,9,null,null,10,null,7,null,null,8,null,4}));
         TreeNode treeNode = createBinaryTree(integerLinkedList);
-        System.out.println("前序遍历");
+        //System.out.println("前序遍历");
         //preOrderTraveral(treeNode);
-        stackOrderTraveral(treeNode);
+        //stackOrderTraveral(treeNode);
         System.out.println("中序遍历");
         //centerOrderTraveral(treeNode);
+        centerOrderStackTraveral(treeNode);
         System.out.println("后序遍历");
         //backOrderTraveral(treeNode);
 
