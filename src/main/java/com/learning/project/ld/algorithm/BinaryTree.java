@@ -1,6 +1,7 @@
 package com.learning.project.ld.algorithm;
 
 import com.google.gson.internal.$Gson$Types;
+import sun.reflect.generics.tree.Tree;
 
 import javax.sound.midi.SysexMessage;
 import java.util.Arrays;
@@ -102,6 +103,33 @@ public class BinaryTree {
                         }
                     }
                 }
+            }
+        }
+
+    }
+
+    public static void centerOrderStackTraveral(TreeNode treeNode){
+        Stack<TreeNode> stack = new Stack<TreeNode>();
+        //first node
+        stack.push(treeNode);
+        //遍历左侧最低端节点
+        while(stack.peek()!=null){
+            //同时满足左右子节点有值
+            if(stack.peek().leftTreeNode!=null){
+                stack.push(stack.peek().leftTreeNode);
+            }else{
+                break;
+            }
+        }
+
+        while(!stack.empty()){
+            TreeNode childTreeNode = stack.pop();
+            if(childTreeNode.rightTreeNode!=null){
+                stack.push(childTreeNode.rightTreeNode);
+
+
+            }else{
+                System.out.println(childTreeNode.data);
             }
         }
 
