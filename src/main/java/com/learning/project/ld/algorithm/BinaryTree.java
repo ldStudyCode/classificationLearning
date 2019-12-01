@@ -66,6 +66,21 @@ public class BinaryTree {
         //first 元素插入
         stack.push(treeNode);
         //遍历最左侧全部元素
+        /*书本实现方式
+        Stack<TreeNode> treeNodeStack = new Stack<TreeNode>();
+        TreeNode treeNode1 = treeNode;
+        while(treeNode1!=null||!stack.isEmpty()){
+            //迭代访问节点左孩子，入栈
+            while(treeNode1!=null){
+                System.out.println(treeNode1.data);
+                stack.push(treeNode1);
+                treeNode1 = treeNode1.leftTreeNode;
+            }
+            if(!stack.isEmpty()){
+                treeNode1 = stack.pop();
+                treeNode1 = treeNode1.rightTreeNode;
+            }
+        }*/
         //前序遍历
         while(stack.peek()!=null){
             //同时满足左右子节点有值
@@ -113,6 +128,24 @@ public class BinaryTree {
      * @param treeNode
      */
     public static void centerOrderStackTraveral(TreeNode treeNode){
+        //改写中序遍历
+        Stack<TreeNode> centerStack = new Stack<TreeNode>();
+        TreeNode centerTreeNode = treeNode;
+        while(centerStack!=null||!centerStack.isEmpty()){
+            //遍历左侧节点
+            while(centerTreeNode!=null){
+                //获取最左侧层级
+                centerStack.push(centerTreeNode);
+                centerTreeNode = centerTreeNode.leftTreeNode;
+            }
+            if(!centerStack.isEmpty()){
+                centerTreeNode = centerStack.pop();
+                System.out.println(centerTreeNode.data);
+                centerTreeNode = centerTreeNode.rightTreeNode;
+
+            }
+        }
+        /*
         Stack<TreeNode> stack = new Stack<TreeNode>();
         //first node
         stack.push(treeNode);
@@ -135,7 +168,7 @@ public class BinaryTree {
                 }
             }
         }
-
+        */
     }
 
     /**
@@ -155,7 +188,40 @@ public class BinaryTree {
      * @param treeNode
      */
     public static void backStackTraveral(TreeNode treeNode){
+        Stack<TreeNode> stack = new Stack<TreeNode>();
+        //初始化
+        stack.push(treeNode);
+        while(stack.peek()!=null){
+            if(stack.peek().leftTreeNode!=null){
+                stack.push(stack.peek().leftTreeNode);
+            }else if(stack.peek().rightTreeNode!=null){
+                stack.push(stack.peek().rightTreeNode);
+            }else {
+                break;
+            }
+        }
+        while(!stack.isEmpty()){
+            TreeNode stackTreeNode = stack.pop();
+            if(stack.isEmpty()){
+                System.out.println(stackTreeNode.data);
+                return;
+            }
+            System.out.println(stackTreeNode.data);
+            //有右节点的话 进行遍历
+            if(stack.peek().rightTreeNode!=null&&stack.peek().rightTreeNode!=stackTreeNode){
+                stack.push(stack.peek().rightTreeNode);
+                while(stack.peek()!=null){
+                    if(stack.peek().leftTreeNode!=null){
+                        stack.push(stack.peek().leftTreeNode);
+                    }else if(stack.peek().rightTreeNode!=null){
+                        stack.push(stack.peek().rightTreeNode);
+                    }else {
+                        break;
+                    }
+                }
+            }
 
+        }
     }
 
     public static void backOrderTraveral(TreeNode treeNode){
@@ -175,8 +241,9 @@ public class BinaryTree {
         System.out.println("中序遍历");
         //centerOrderTraveral(treeNode);
         centerOrderStackTraveral(treeNode);
-        System.out.println("后序遍历");
+        //System.out.println("后序遍历");
         //backOrderTraveral(treeNode);
+        //backStackTraveral(treeNode);
 
     }
 }
